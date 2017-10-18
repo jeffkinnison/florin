@@ -1,4 +1,10 @@
-"""
+"""Composable actions for grayscale intensity operations.
+
+Classes
+-------
+IntensityAction
+RescaleIntensity
+    Rescale the image grayscale intensity to a new range.
 """
 from florin.actions.base import BaseAction
 
