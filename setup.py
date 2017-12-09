@@ -8,7 +8,7 @@ setup(
     author='Jeff Kinnison, Elia Shahbazi',
     author_email='jkinniso@nd.edu, ashahbaz@nd.edu',
     packages=['florin',
-              'florin.actions'
+              'florin.actions',
               'florin.thresholding'],
     classifiers=[
         'Development Status :: 3 - Alpha',
