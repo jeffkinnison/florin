@@ -29,8 +29,8 @@ setup(
     ],
     keywords='machine_learning hyperparameters distributed_computing',
     install_requires=[
-        'scipy>=0.18.1',
+        'scipy>=0.19.0',
         'numpy>=1.12.0',
-        'scikit-image>=0.18.1'
+        'scikit-image>=0.19.0'
     ]
 )
