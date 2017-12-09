@@ -19,7 +19,7 @@ class BaseAction(object):
 
     """
     def __init__(self, name=None, next=None):
-        self.name = name if name is not None else 'base'
+        self.name = str(name) if name is not None else 'base'
         self.next = next
 
     def __call__(self):
@@ -31,11 +31,11 @@ class BaseAction(object):
 
     @next.setter
     def next(self, value):
-        if isinstance(value, BaseAction):
+        if isinstance(value, BaseAction) or value is None:
             self.__next = value
         else:
             raise InvalidActionError(value)
 
     @next.deleter
     def next(self):
-        del self.__next
+        self.__next = None
