@@ -37,7 +37,7 @@ class RescaleIntensity(IntensityAction):
 
     Notes
     -----
-    Parameter documentation shamelessly taken from the `scikit-image docs
+    Parameter documentation can be found in the `scikit-image docs
     <http://scikit-image.org/docs/dev/api/skimage.exposure.html#skimage.exposure.rescale_intensity>`
     """
     def __init__(self, name=None, out_range='image'):

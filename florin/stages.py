@@ -71,5 +71,18 @@ class FilteringStage(BaseStage):
 
 
 class OutputStage(BaseStage):
-    def __init__(self, actions=None):
+    def __init__(self, filename='florin.h5', actions=None):
+        if actions is None:
+            actions = []
+
+        output = False
+        for action in actions:
+            if isinstance(action, OutputAction):
+                output = True
+                break
+
+        if not output:
+            output = HDF5Output(filename=filename)
+            actions.append(output)
+
         super(OutputStage, self).__init__(actions=actions)
