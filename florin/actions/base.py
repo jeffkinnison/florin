@@ -6,10 +6,12 @@ BaseAction
 InvalidActionError
 """
 
+
 class InvalidActionError(ValueError):
     def __init__(self, value):
         msg = 'Invalid action: {}'.format(value)
         super(InvalidActionError, self).__init__(msg)
+
 
 class BaseAction(object):
     """Base class for FLoRiN image processing, filtering, and output actions.
