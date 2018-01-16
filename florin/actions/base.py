@@ -18,6 +18,28 @@ class BaseAction(object):
 
     Parameters
     ----------
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Attributes
+    ----------
+    name : str
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction` or None
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Notes
+    -----
+    As a flexible set of image processing steps, FLoRIN is broken down into
+    stages and discrete actions. Chaining actions together as linked list of
+    `BaseAction` subclass instances allows for both customizability and
+    extensibility as FLoRIN grows.
 
     """
     def __init__(self, name=None, next=None):
