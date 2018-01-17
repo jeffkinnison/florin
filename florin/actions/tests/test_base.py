@@ -1,6 +1,9 @@
 import pytest
 
-from florin.actions.base import BaseAction, InvalidActionError
+from florin.actions.base import BaseAction, InvalidActionError, NoOpError, \
+                                FinalAction
+
+import numpy as np
 
 
 class TestBaseAction(object):
@@ -12,7 +15,8 @@ class TestBaseAction(object):
         # Test the default initialization
         a = self.__testaction__()
         assert a.name == 'base'
-        assert a.next is None
+        with pytest.raises(FinalAction):
+            a.next
 
         # Ensure that name and action are set correctly
         b = self.__testaction__(name='test', next=a)
@@ -20,15 +24,38 @@ class TestBaseAction(object):
         assert b.next is a
 
     def test_call(self):
+        def linear(img):
+            return img
+
+        class Linear():
+            def __call__(self, img):
+                return img
+
         # Ensure that calling a BaseAction raises an exception
-        with pytest.raises(NotImplementedError):
+        img = np.ones((5, 5))
+
+        # Test that FinalAction is raised when the function is None
+        with pytest.raises(NoOpError):
             a = self.__testaction__()
-            a()
+            a(img)
+
+        # Test that a named function is called
+        a = self.__testaction__(function=linear)
+        assert np.all(a(img) == img)
+
+        # Test that a lambda is called
+        a = self.__testaction__(function=lambda x: x)
+        assert np.all(a(img) == img)
+
+        # Test that a callable class is called
+        a = self.__testaction__(function=Linear())
+        assert np.all(a(img) == img)
 
     def test_next_getter(self):
         # Test with None as next
-        a = self.__testaction__()
-        assert a.next is None
+        with pytest.raises(FinalAction):
+            a = self.__testaction__()
+            a.next
 
         # Test with another action as next
         b = self.__testaction__(next=a)
@@ -44,7 +71,8 @@ class TestBaseAction(object):
 
         # Test setting None
         b.next = None
-        assert b.next is None
+        with pytest.raises(FinalAction):
+            b.next
 
         # Test that setting actions of other types throws an exception
         with pytest.raises(InvalidActionError):
@@ -71,4 +99,5 @@ class TestBaseAction(object):
 
         # Test that deleting next simply sets it to None
         del b.next
-        assert b.next is None
+        with pytest.raises(FinalAction):
+            b.next

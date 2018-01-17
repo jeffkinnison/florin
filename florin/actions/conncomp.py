@@ -48,7 +48,7 @@ class ConnectedComponents(BaseAction):
     --------
     `florin.actions.base.BaseAction`
     """
-    def __init__(self, connectivity=2, name='ConnComp', next=None):
+    def __init__(self, connectivity=2, name=None, next=None):
         self.connectivity = connectivity
         super(ConnectedComponents, self).__init__(name=name, next=next)
 

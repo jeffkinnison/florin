@@ -4,13 +4,29 @@ Classes
 -------
 BaseAction
 InvalidActionError
+NoOpError
+FinalAction
 """
 
 
-class InvalidActionError(ValueError):
+class InvalidActionError(Exception):
+    """Raised when the supplied argument to ``next`` is not a BaseAction."""
     def __init__(self, value):
         msg = 'Invalid action: {}'.format(value)
         super(InvalidActionError, self).__init__(msg)
+
+
+class NoOpError(Exception):
+    """Raised when the action's function is not callable."""
+    def __init__(self, action):
+        msg = 'Action {} does not contain a valid operation. ' \
+            .format(action.name)
+        msg += 'Ensure that a valid function is supplied to this action.'
+
+
+class FinalAction(Exception):
+    """Raised at the end of a chain of actions."""
+    pass
 
 
 class BaseAction(object):
@@ -18,6 +34,8 @@ class BaseAction(object):
 
     Parameters
     ----------
+    function : callable
+        The function that this action will call to process the image.
     name : str, optional
         The name of this action. Default is the name of the class plus an
         integer count.
@@ -27,6 +45,9 @@ class BaseAction(object):
 
     Attributes
     ----------
+    function : callable
+        The function that this action will call to process the image. A value
+        of None
     name : str
         The name of this action. Default is the name of the class plus an
         integer count.
@@ -42,16 +63,26 @@ class BaseAction(object):
     extensibility as FLoRIN grows.
 
     """
-    def __init__(self, name=None, next=None):
-        self.name = str(name) if name is not None else 'base'
-        self.next = next
 
-    def __call__(self):
-        raise NotImplementedError
+    def __init__(self, function=None, name=None, next=None, *args, **kws):
+        self.name = str(name) if name is not None else 'base'
+        self.__next = next
+        self.__function = function
+        self.args = args
+        self.kws = kws
+
+    def __call__(self, img):
+        if callable(self.function):
+            return self.function(img, *self.args, **self.kws)
+        else:
+            raise NoOpError(self)
 
     @property
     def next(self):
-        return self.__next
+        if self.__next is not None:
+            return self.__next
+        else:
+            raise FinalAction
 
     @next.setter
     def next(self, value):
@@ -63,3 +94,7 @@ class BaseAction(object):
     @next.deleter
     def next(self):
         self.__next = None
+
+    @property
+    def function(self):
+        return self.__function

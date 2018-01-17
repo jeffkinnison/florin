@@ -14,18 +14,12 @@ class TestConnectedComponents(TestBaseAction):
         # Test the default setup
         a = self.__testaction__()
         assert a.connectivity == 2
-        assert a.name == 'ConnComp'
-        assert a.next is None
 
         # Test with custom initialization
-        b = self.__testaction__(connectivity=8, name='foo', next=a)
+        b = self.__testaction__(connectivity=8)
         assert b.connectivity == 8
-        assert b.name == 'foo'
-        assert b.next is a
 
-        # Test with invalid ``next`` argument to raise InvalidActionError
-        with pytest.raises(InvalidActionError):
-            b = self.__testaction__(next=42)
+        super(TestConnectedComponents, self).test_init()
 
     def test_call(self):
         """Test that objects are returned from ConnectedComponents"""
