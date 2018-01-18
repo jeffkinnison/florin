@@ -65,15 +65,3 @@ class ConnectedComponents(BaseAction):
             e = 'The intensity image does not match the input image.'
             raise DimensionMismatchError(img, kws['intensity_image'], extra=e)
         return objs
-
-    # def __call__(self, img, intensity_image=None):
-    #     """
-    #     """
-    #     labels = label(img, connectivity=self.connectivity)
-    #     try:
-    #         objs = regionprops(labels, intensity_image=intensity_image)
-    #     except ValueError:
-    #         e = 'The intensity image does not match the input image.'
-    #         raise DimensionMismatchError(img, intensity_image, extra=e)
-    #
-    #     return objs
