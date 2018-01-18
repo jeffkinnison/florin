@@ -67,7 +67,7 @@ class BaseAction(object):
     def __init__(self, function=None, name=None, next=None, *args, **kws):
         self.name = str(name) if name is not None else 'base'
         self.__next = next
-        self.__function = function
+        self.function = function
         self.args = args
         self.kws = kws
 
@@ -94,7 +94,3 @@ class BaseAction(object):
     @next.deleter
     def next(self):
         self.__next = None
-
-    @property
-    def function(self):
-        return self.__function
