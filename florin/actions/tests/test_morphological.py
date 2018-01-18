@@ -18,31 +18,42 @@ class TestMorphologicalAction(TestBaseAction):
         """Ensure that morphological actions are correctly initialized."""
         # Test the default initialization
         a = self.__testaction__()
-        assert a.sel is None
+        assert a.kws['structure'] is None
 
-        # Test with a structuring element
-        sel = np.zeros((3, 3, 3))
-        sel[1] = 1
-        a = self.__testaction__(sel=sel)
-        assert a.sel is sel
+        # Test initialization with a boolean structure
+        bool_sel = np.eye(3, dtype=np.bool)
+        a = self.__testaction__(structure=bool_sel)
+        assert a.kws['structure'].dtype == np.bool
+        assert np.all(a.kws['structure'] == bool_sel)
+
+        # Test that a non-boolean numeric numpy array is converted to boolean
+        dtypes = [np.object, np.float64, np.float32,
+                  np.uint8, np.uint16, np.uint32, np.uint64,
+                  np.int8, np.int16, np.int32, np.int64]
+        for dtype in dtypes:
+            sel = np.eye(3, dtype=dtype)
+            a = self.__testaction__(structure=sel)
+            assert a.kws['structure'].dtype == np.bool
+            assert np.all(a.kws['structure'] == bool_sel)
+
+        # Test that non-numeric numpy arrays raise an exception
+        dtypes = [np.str, np.unicode]
+        for dtype in dtypes:
+            sel = np.eye(3, dtype=dtype)
+            with pytest.raises(InvalidStructuringElementError):
+                a = self.__testaction__(structure=sel)
+
+        # Test that non-numpy arrays raise an exception
+        sels = [1, 1.0, 'hi', True, False, (1,), {'hi': 1}, [1]]
+        for sel in sels:
+            with pytest.raises(InvalidStructuringElementError):
+                a = self.__testaction__(structure=sel)
 
         super(TestMorphologicalAction, self).test_init()
-
-    def test_call(self):
-        """Ensure that running __call__ raises a NotImplementedError here."""
-        a = self.__testaction__()
-        with pytest.raises(NotImplementedError):
-            a(np.zeros((5, 5)))
 
 
 class TestBinaryDilation(TestMorphologicalAction):
     __testaction__ = BinaryDilation
-
-    def test_init(self):
-        a = self.__testaction__()
-        assert a.function is scipy.ndimage.binary_dilation
-
-        super(TestBinaryDilation, self).test_init()
 
     def test_call(self):
         """Ensure that a binary dilation is performed on valid data"""
@@ -55,24 +66,14 @@ class TestBinaryDilation(TestMorphologicalAction):
              [0, 0, 1, 0, 0],
              [0, 0, 0, 0, 0]]
         o = np.array(o, dtype=np.bool)
-        a = self.__testaction__(sel=sel)
+        a = self.__testaction__()
         out = a(i)
         assert np.all(out == o)
-
-        a.sel = "hello"
-        with pytest.raises(InvalidStructuringElementError):
-            a(i)
 
 
 class TestBinaryErosion(TestMorphologicalAction):
     __testaction__ = BinaryErosion
 
-    def test_init(self):
-        a = self.__testaction__()
-        assert a.function is scipy.ndimage.binary_erosion
-
-        super(TestBinaryErosion, self).test_init()
-
     def test_call(self):
         """Ensure that a binary dilation is performed on valid data"""
         sel = generate_binary_structure(2, 1)
@@ -84,24 +85,14 @@ class TestBinaryErosion(TestMorphologicalAction):
              [0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0]]
         o = np.array(o, dtype=np.bool)
-        a = self.__testaction__(sel=sel)
+        a = self.__testaction__()
         out = a(i)
         assert np.all(out == o)
-
-        a.sel = "hello"
-        with pytest.raises(InvalidStructuringElementError):
-            a(i)
 
 
 class TestBinaryOpening(TestMorphologicalAction):
     __testaction__ = BinaryOpening
 
-    def test_init(self):
-        a = self.__testaction__()
-        assert a.function is scipy.ndimage.binary_opening
-
-        super(TestBinaryOpening, self).test_init()
-
     def test_call(self):
         """Ensure that a binary dilation is performed on valid data"""
         sel = generate_binary_structure(2, 1)
@@ -113,23 +104,13 @@ class TestBinaryOpening(TestMorphologicalAction):
              [0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0]]
         o = np.array(o, dtype=np.bool)
-        a = self.__testaction__(sel=sel)
+        a = self.__testaction__()
         out = a(i)
         assert np.all(out == o)
-
-        a.sel = "hello"
-        with pytest.raises(InvalidStructuringElementError):
-            a(i)
 
 
 class TestBinaryClosing(TestMorphologicalAction):
     __testaction__ = BinaryClosing
-
-    def test_init(self):
-        a = self.__testaction__()
-        assert a.function is scipy.ndimage.binary_closing
-
-        super(TestBinaryClosing, self).test_init()
 
     def test_call(self):
         """Ensure that a binary dilation is performed on valid data"""
@@ -142,23 +123,13 @@ class TestBinaryClosing(TestMorphologicalAction):
              [0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0]]
         o = np.array(o, dtype=np.bool)
-        a = self.__testaction__(sel=sel)
+        a = self.__testaction__()
         out = a(i)
         assert np.all(out == o)
-
-        a.sel = "hello"
-        with pytest.raises(InvalidStructuringElementError):
-            a(i)
 
 
 class TestBinaryFill(TestMorphologicalAction):
     __testaction__ = BinaryFill
-
-    def test_init(self):
-        a = self.__testaction__()
-        assert a.function is scipy.ndimage.binary_fill_holes
-
-        super(TestBinaryFill, self).test_init()
 
     def test_call(self):
         """Ensure that a binary dilation is performed on valid data"""
@@ -175,10 +146,8 @@ class TestBinaryFill(TestMorphologicalAction):
              [0, 1, 1, 1, 0],
              [0, 0, 0, 0, 0]]
         o = np.array(o, dtype=np.bool)
-        a = self.__testaction__(sel=sel)
+        a = self.__testaction__(structure=sel)
+        print(a.args)
+        print(a.kws)
         out = a(i)
         assert np.all(out == o)
-
-        a.sel = "hello"
-        with pytest.raises(InvalidStructuringElementError):
-            a(i)

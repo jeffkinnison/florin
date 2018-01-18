@@ -2,7 +2,6 @@
 
 Classes
 -------
-MorphologicalAction
 BinaryDilation
 BinaryErosion
 BinaryOpening
@@ -11,6 +10,7 @@ BinaryFill
 """
 from .base import BaseAction
 
+import numpy as np
 from scipy.ndimage import binary_dilation, binary_erosion, binary_opening, \
                           binary_closing, binary_fill_holes
 
@@ -29,10 +29,8 @@ class MorphologicalAction(BaseAction):
 
     Parameters
     ----------
-    function : function, optional
-        The morphological operation to perform.
-    sel : binary `numpy.ndarray`, optional
-        The structuring element to apply to the ``function``.
+    structure : binary `numpy.ndarray`, optional
+        The structuring element to apply to the operation.
     name : str, optional
         The name of this action. Default is the name of the class plus an
         integer count.
@@ -42,10 +40,8 @@ class MorphologicalAction(BaseAction):
 
     Attributes
     ----------
-    function : function
-        The morphological operation to perform.
-    sel : binary `numpy.ndarray`
-        The structuring element to apply to the ``function``.
+    structure : binary `numpy.ndarray`
+        The structuring element to apply to the operation.
     name : str, optional
         The name of this action. Default is the name of the class plus an
         integer count.
@@ -53,72 +49,195 @@ class MorphologicalAction(BaseAction):
         The subsequent action to perform. Setting this to None indicates the
         end of a chain of actions.
     """
-    def __init__(self, function=None, sel=None, name=None, next=None):
-        self.sel = sel
-        self.__function = function
-        super(MorphologicalAction, self).__init__(name=name, next=next)
 
-    @property
-    def function(self):
-        return self.__function
+    def __init__(self, structure=None, name=None, next=None):
+        if structure is not None and not isinstance(structure, np.ndarray):
+            raise InvalidStructuringElementError(structure)
+        if isinstance(structure, np.ndarray):
+            try:
+                structure = structure.astype(np.bool)
+            except (TypeError, ValueError):
+                raise InvalidStructuringElementError(structure)
+        function = self.morph
+        super(MorphologicalAction, self).__init__(structure=structure,
+                                                  function=function,
+                                                  name=name,
+                                                  next=next)
 
-    def __call__(self, img):
-        if self.__function is None:
-            raise NotImplementedError
-        try:
-            out = self.__function(img, structure=self.sel)
-        # For some reason, scipy raises an IndexError when the structuring
-        # element is not of the correct type.
-        except (IndexError, ValueError):
-            raise InvalidStructuringElementError(self.sel)
-        return out
+    def morph(self, img, *args, **kws):
+        raise NotImplementedError
 
 
 class BinaryDilation(MorphologicalAction):
+    """Perform a binary dilation on an image or volume.
+
+    Parameters
+    ----------
+    structure : binary `numpy.ndarray`, optional
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Attributes
+    ----------
+    structure : binary `numpy.ndarray`
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Notes
+    -----
+    For details about binary dilation, see the `scipy docs
+    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.binary_dilation.html>`
     """
-    """
-    def __init__(self, sel=None, name=None, next=None):
-        super(BinaryDilation, self).__init__(function=binary_dilation,
-                                             sel=sel,
-                                             name=name,
-                                             next=next)
+
+    def morph(self, img, *args, **kws):
+        return binary_dilation(img, *args, **kws)
 
 
 class BinaryErosion(MorphologicalAction):
+    """Perform a binary erosion on an image or volume.
+
+    Parameters
+    ----------
+    structure : binary `numpy.ndarray`, optional
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Attributes
+    ----------
+    structure : binary `numpy.ndarray`
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Notes
+    -----
+    For details about binary dilation, see the `scipy docs
+    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.binary_erosion.html>`
     """
-    """
-    def __init__(self, sel=None, name=None, next=None):
-        super(BinaryErosion, self).__init__(function=binary_erosion,
-                                             sel=sel,
-                                             name=name,
-                                             next=next)
+
+    def morph(self, img, *args, **kws):
+        return binary_erosion(img, *args, **kws)
 
 
 class BinaryOpening(MorphologicalAction):
+    """Perform a binary opening on an image or volume.
+
+    Parameters
+    ----------
+    structure : binary `numpy.ndarray`, optional
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Attributes
+    ----------
+    structure : binary `numpy.ndarray`
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Notes
+    -----
+    For details about binary dilation, see the `scipy docs
+    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.binary_opening.html>`
     """
-    """
-    def __init__(self, sel=None, name=None, next=None):
-        super(BinaryOpening, self).__init__(function=binary_opening,
-                                             sel=sel,
-                                             name=name,
-                                             next=next)
+
+    def morph(self, img, *args, **kws):
+        return binary_opening(img, *args, **kws)
 
 
 class BinaryClosing(MorphologicalAction):
+    """Perform a binary closing on an image or volume.
+
+    Parameters
+    ----------
+    structure : binary `numpy.ndarray`, optional
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Attributes
+    ----------
+    structure : binary `numpy.ndarray`
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Notes
+    -----
+    For details about binary dilation, see the `scipy docs
+    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.binary_closing.html>`
     """
-    """
-    def __init__(self, sel=None, name=None, next=None):
-        super(BinaryClosing, self).__init__(function=binary_closing,
-                                             sel=sel,
-                                             name=name,
-                                             next=next)
+
+    def morph(self, img, *args, **kws):
+        return binary_closing(img, *args, **kws)
 
 
 class BinaryFill(MorphologicalAction):
+    """Fill holes in a binary image or volume.
+
+    Parameters
+    ----------
+    structure : binary `numpy.ndarray`, optional
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Attributes
+    ----------
+    structure : binary `numpy.ndarray`
+        The structuring element to apply to the operation.
+    name : str, optional
+        The name of this action. Default is the name of the class plus an
+        integer count.
+    next : instance of `florin.actions.base.BaseAction`, optional
+        The subsequent action to perform. Setting this to None indicates the
+        end of a chain of actions.
+
+    Notes
+    -----
+    For details about binary filling, see the `scipy docs
+    <https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.binary_fill_holes.html>`
     """
-    """
-    def __init__(self, sel=None, name=None, next=None):
-        super(BinaryFill, self).__init__(function=binary_fill_holes,
-                                             sel=sel,
-                                             name=name,
-                                             next=next)
+
+    def morph(self, img, *args, **kws):
+        return binary_fill_holes(img, *args, **kws)
