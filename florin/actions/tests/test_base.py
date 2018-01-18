@@ -24,31 +24,35 @@ class TestBaseAction(object):
         assert b.next is a
 
     def test_call(self):
-        def linear(img):
+        def linear(img, *args, **kws):
             return img
 
         class Linear():
-            def __call__(self, img):
+            def __call__(self, img, *args, **kws):
                 return img
 
         # Ensure that calling a BaseAction raises an exception
         img = np.ones((5, 5))
 
-        # Test that FinalAction is raised when the function is None
+        # Test that NoOpError is raised when the function is not callable
         with pytest.raises(NoOpError):
             a = self.__testaction__()
+            a.function = None
             a(img)
 
         # Test that a named function is called
-        a = self.__testaction__(function=linear)
+        a = self.__testaction__()
+        a.function = linear
         assert np.all(a(img) == img)
 
         # Test that a lambda is called
-        a = self.__testaction__(function=lambda x: x)
+        a = self.__testaction__()
+        a.function = lambda x, *y, **z: x
         assert np.all(a(img) == img)
 
         # Test that a callable class is called
-        a = self.__testaction__(function=Linear())
+        a = self.__testaction__()
+        a.function = Linear()
         assert np.all(a(img) == img)
 
     def test_next_getter(self):
