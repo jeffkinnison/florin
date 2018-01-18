@@ -48,18 +48,32 @@ class ConnectedComponents(BaseAction):
     --------
     `florin.actions.base.BaseAction`
     """
-    def __init__(self, connectivity=2, name=None, next=None):
-        self.connectivity = connectivity
-        super(ConnectedComponents, self).__init__(name=name, next=next)
+    def __init__(self, connectivity=2, intensity_image=None, name=None,
+                 next=None):
+        super(ConnectedComponents, self).__init__(
+            connectivity=connectivity,
+            intensity_image=intensity_image,
+            function=self.connected_components,
+            name=name,
+            next=next)
 
-    def __call__(self, img, intensity_image=None):
-        """
-        """
-        labels = label(img, connectivity=self.connectivity)
+    def connected_components(self, img, *args, **kws):
         try:
-            objs = regionprops(labels, intensity_image=intensity_image)
+            labels = label(img, connectivity=kws['connectivity'])
+            objs = regionprops(labels, intensity_image=kws['intensity_image'])
         except ValueError:
             e = 'The intensity image does not match the input image.'
-            raise DimensionMismatchError(img, intensity_image, extra=e)
-
+            raise DimensionMismatchError(img, kws['intensity_image'], extra=e)
         return objs
+
+    # def __call__(self, img, intensity_image=None):
+    #     """
+    #     """
+    #     labels = label(img, connectivity=self.connectivity)
+    #     try:
+    #         objs = regionprops(labels, intensity_image=intensity_image)
+    #     except ValueError:
+    #         e = 'The intensity image does not match the input image.'
+    #         raise DimensionMismatchError(img, intensity_image, extra=e)
+    #
+    #     return objs

@@ -13,19 +13,18 @@ class TestConnectedComponents(TestBaseAction):
         """Ensure that the connectivity, name, and next are set"""
         # Test the default setup
         a = self.__testaction__()
-        assert a.connectivity == 2
+        assert a.kws['connectivity'] == 2
 
         # Test with custom initialization
         b = self.__testaction__(connectivity=8)
-        assert b.connectivity == 8
+        assert b.kws['connectivity'] == 8
 
         super(TestConnectedComponents, self).test_init()
 
     def test_call(self):
         """Test that objects are returned from ConnectedComponents"""
-        cc = self.__testaction__()
-
         # Test with a single component
+        cc = self.__testaction__()
         comps = np.ones((3, 3), dtype=np.uint8)
         objs = cc(comps)
         assert len(objs) == 1
@@ -48,7 +47,8 @@ class TestConnectedComponents(TestBaseAction):
 
         # Test with intensity image
         intensity = np.random.randint(0, 10, size=(3, 3))
-        objs = cc(comps, intensity_image=intensity)
+        cc = self.__testaction__(intensity_image=intensity)
+        objs = cc(comps)
         assert len(objs) == 2
         assert objs[0]['area'] == 2
         assert 'max_intensity' in objs[0]
@@ -60,5 +60,7 @@ class TestConnectedComponents(TestBaseAction):
         assert 'min_intensity' in objs[1]
 
         # Test with bad intensity_image shape
+        intensity = np.ones((2, 2))
+        cc = self.__testaction__(intensity_image=intensity)
         with pytest.raises(DimensionMismatchError):
-            objs = cc(comps, intensity_image=np.ones((2, 2)))
+            objs = cc(comps)
