@@ -31,6 +31,7 @@ setup(
     install_requires=[
         'scipy>=0.19.0',
         'numpy>=1.12.0',
-        'scikit-image>=0.19.0'
+        'scikit-image>=0.13.1',
+        'h5py'
     ]
 )
