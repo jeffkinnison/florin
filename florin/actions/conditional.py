@@ -6,20 +6,27 @@ ConditionalAction
 """
 from florin.actions.base import BaseAction
 
+from numbers import Number
+
 import numpy as np
+from skimage.measure._regionprops import PROP_VALS
 
 
-class InvalidObjectAttributeError(KeyError):
-    """Raised when an invalid attribute is accessed for a condition"""
-    def __init__(self, key, obj):
-        attrs = ' '.join([key for key in obj])
-        msg = 'Invalid object attribute {}. Valid attributes: {}'
-        super(InvalidObjectAttributeError, self).__init__(
-            msg.format(key, attrs))
+class InvalidAttributeKeyError(Exception):
+    '''Raised when an invalid key is provided.'''
+    def __init__(self, key, valid):
+        msg = 'The provided key does not correspond with an attribute: {}. ' \
+            .format(key)
+        msg += 'Valid keys are: {}.'.format(', '.join(valid))
+        super(InvalidAttributeKeyError, self).__init__(msg)
 
 
-class DimensionMismatchError(Exception):
-    pass
+class InvalidBounds(Exception):
+    '''Raised when the provided bounds are not numeric.'''
+    def __init__(self, low, high):
+        msg = 'The provided bounds [{}, {}) are not valid. '.format(low, high)
+        msg += 'Bounds must be numeric.'
+        super(InvalidBounds, self).__init__(msg)
 
 
 class ConditionalAction(BaseAction):
@@ -44,27 +51,33 @@ class ConditionalAction(BaseAction):
         The key of the object property to check.
     """
 
-    def __init__(self, low=None, high=None, key=None):
-        self.low = low if low is not None else -np.inf
-        self.high = high if high is not None else np.inf
-        self.key = key
+    def __init__(self, low=None, high=None, key='area', name=None,
+                 next=None):
+        if not isinstance(key, str) or key not in PROP_VALS:
+            raise InvalidAttributeKeyError(key, list(PROP_VALS))
 
-    def __call__(self, obj):
+        low = low if low is not None else -np.inf
+        high = high if high is not None else np.inf
+
+        if not isinstance(low, Number) or not isinstance(high, Number):
+            raise InvalidBounds(low, high)
+
+        low, high = sorted([low, high])
+        key = key
+        super(ConditionalAction, self).__init__(low=low, high=high, key=key,
+                                                function=self.in_range,
+                                                name=name,
+                                                next=next)
+
+    def in_range(self, obj, key, low, high):
+        attr = self.get_attr(obj, key)
+        return attr is not None and attr >= low and attr < high
+
+    def get_attr(self, obj, key):
         try:
-            attr = self.__op(obj[self.key])
+            attr = obj[key]
         except KeyError:
-            raise InvalidObjectAttributeError(self.key, obj)
-        except IndexError:
-            raise
-
-        try:
-            ret = self.low <= attr <= self.high
-        except TypeError:
-            pass
-
-        return ret
-
-    def __op(self, attr):
+            attr = None
         return attr
 
 
@@ -87,8 +100,10 @@ class AreaRange(ConditionalAction):
     high : float
         The upper bound of the conditional range.
     """
-    def __init__(self, low=None, high=None):
-        super(AreaRange, self).__init__(low=low, high=high, key='area')
+    def __init__(self, low=None, high=None, name=None, next=None):
+        super(AreaRange, self).__init__(low=low, high=high, key='area',
+                                        name=name,
+                                        next=next)
 
 
 class WidthRange(ConditionalAction):
@@ -108,14 +123,20 @@ class WidthRange(ConditionalAction):
     high : float
         The upper bound of the conditional range.
     """
-    def __init__(self, low=None, high=None):
-        super(WidthRange, self).__init__(low=low, high=high, key='bbox')
+    def __init__(self, low=None, high=None, name=None, next=None):
+        super(WidthRange, self).__init__(low=low, high=high, key='bbox',
+                                         name=name,
+                                         next=next)
 
-    def __op(self, attr):
-        split = int(len(attr) / 2)
-        diffs = list(map(lambda x, y: return np.abs(y - x),
-                         zip(attr[:split], attr[split:])))
-        return diffs[-1]
+    def get_attr(self, obj):
+        try:
+            bbox = obj[self.kws['key']]
+            split = int(len(bbox) / 2)
+            attr = bbox[-1] - bbox[split - 1]
+        except KeyError:
+            attr = None
+        return attr
+
 
 class HeightRange(ConditionalAction):
     """Filter connected components based on the bounding box height.
@@ -134,14 +155,19 @@ class HeightRange(ConditionalAction):
     high : float
         The upper bound of the conditional range.
     """
-    def __init__(self, low=None, high=None):
-        super(HeightRange, self).__init__(low=low, high=high, key='bbox')
+    def __init__(self, low=None, high=None, name=None, next=None):
+        super(HeightRange, self).__init__(low=low, high=high, key='bbox',
+                                          name=name,
+                                          next=next)
 
-    def __op(self, attr):
-        split = int(len(attr) / 2)
-        diffs = list(map(lambda x, y: return np.abs(y - x),
-                         zip(attr[:split], attr[split:])))
-        return diffs[-2]
+    def get_attr(self, obj):
+        try:
+            bbox = obj[self.kws['key']]
+            split = int(len(bbox) / 2)
+            attr = bbox[-2] - bbox[split - 2]
+        except KeyError:
+            attr = None
+        return attr
 
 
 class DepthRange(ConditionalAction):
@@ -161,14 +187,19 @@ class DepthRange(ConditionalAction):
     high : float
         The upper bound of the conditional range.
     """
-    def __init__(self, low=None, high=None):
-        super(DepthRange, self).__init__(low=low, high=high, key='bbox')
+    def __init__(self, low=None, high=None, name=None, next=None):
+        super(DepthRange, self).__init__(low=low, high=high, key='bbox',
+                                         name=name,
+                                         next=next)
 
-    def __op(self, attr):
-        split = int(len(attr) / 2)
-        diffs = list(map(lambda x, y: return np.abs(y - x),
-                         zip(attr[:split], attr[split:])))
-        return diffs[-3]
+    def get_attr(self, obj):
+        try:
+            bbox = obj[self.kws['key']]
+            split = int(len(bbox) / 2)
+            attr = bbox[-3] - bbox[split - 2]
+        except KeyError:
+            attr = None
+        return attr
 
 
 class RatioRange(ConditionalAction):
@@ -192,15 +223,21 @@ class RatioRange(ConditionalAction):
     high : float
         The upper bound of the conditional range.
     """
-    def __init__(self, low=None, high=None):
-        super(RatioRange, self).__init__(low=low, high=high, key='bbox')
+    def __init__(self, low=None, high=None, name=None, next=None):
+        super(RatioRange, self).__init__(low=low, high=high, key='bbox',
+                                         name=name,
+                                         next=next)
 
-    def __op(self, attr):
-        split = int(len(attr) / 2)
-        diffs = list(map(lambda x, y: return np.abs(y - x),
-                         zip(attr[:split], attr[split:])))
-        ratio = diffs[-1] / diffs[-2]
-        return ratio if ratio > 0.5 else (1.0 / ratio)
+    def get_attr(self, obj):
+        try:
+            bbox = obj[self.kws['key']]
+            split = int(len(bbox) / 2)
+            width = bbox[-1] - bbox[split - 1]
+            height = bbox[-2] - bbox[split-2]
+            ratio = width / height
+        except KeyError:
+            ratio = None
+        return ratio
 
 
 class ExtentRange(ConditionalAction):
@@ -220,8 +257,10 @@ class ExtentRange(ConditionalAction):
     high : float
         The upper bound of the conditional range.
     """
-    def __init__(self, low=None, high=None):
-        super(ExtentRange, self).__init__(low=low, high=high, key='extent')
+    def __init__(self, low=None, high=None, name=None, next=None):
+        super(ExtentRange, self).__init__(low=low, high=high, key='extent',
+                                          name=name,
+                                          next=next)
 
 
 class IntensityRange(ConditionalAction):
@@ -241,8 +280,10 @@ class IntensityRange(ConditionalAction):
     high : float
         The upper bound of the conditional range.
     """
-    def __init__(self, low=None, high=None):
+    def __init__(self, low=None, high=None, name=None, next=None):
         super(IntensityRange, self).__init__(
             low=low,
             high=high,
-            key='mean_intensity')
+            key='mean_intensity',
+            name=name,
+            next=next)
