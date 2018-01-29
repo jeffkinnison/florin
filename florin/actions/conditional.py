@@ -71,7 +71,7 @@ class ConditionalAction(BaseAction):
 
     def in_range(self, obj, key, low, high):
         attr = self.get_attr(obj, key)
-        return attr is not None and attr >= low and attr < high
+        return attr is not None and attr >= low and attr <= high
 
     def get_attr(self, obj, key):
         try:
@@ -128,11 +128,17 @@ class WidthRange(ConditionalAction):
                                          name=name,
                                          next=next)
 
-    def get_attr(self, obj):
+    def get_attr(self, obj, key):
         try:
-            bbox = obj[self.kws['key']]
+            bbox = obj[key]
             split = int(len(bbox) / 2)
-            attr = bbox[-1] - bbox[split - 1]
+            hi, lo = (bbox[-1], bbox[split - 1])
+            if lo not in [np.inf, -np.inf] and hi not in [np.inf, -np.inf]:
+                attr = np.abs(hi - lo)
+            elif hi == np.inf:
+                attr = hi
+            elif lo == -np.inf:
+                attr = lo
         except KeyError:
             attr = None
         return attr
@@ -160,11 +166,17 @@ class HeightRange(ConditionalAction):
                                           name=name,
                                           next=next)
 
-    def get_attr(self, obj):
+    def get_attr(self, obj, key):
         try:
-            bbox = obj[self.kws['key']]
+            bbox = obj[key]
             split = int(len(bbox) / 2)
-            attr = bbox[-2] - bbox[split - 2]
+            hi, lo = (bbox[-2], bbox[split - 2])
+            if lo not in (np.inf, -np.inf) and hi not in (np.inf, -np.inf):
+                attr = np.abs(hi - lo)
+            elif hi == np.inf:
+                attr = hi
+            elif lo == -np.inf:
+                attr = lo
         except KeyError:
             attr = None
         return attr
@@ -192,11 +204,17 @@ class DepthRange(ConditionalAction):
                                          name=name,
                                          next=next)
 
-    def get_attr(self, obj):
+    def get_attr(self, obj, key):
         try:
-            bbox = obj[self.kws['key']]
+            bbox = obj[key]
             split = int(len(bbox) / 2)
-            attr = bbox[-3] - bbox[split - 2]
+            hi, lo = (bbox[-3], bbox[split - 3])
+            if lo not in (np.inf, -np.inf) and hi not in (np.inf, -np.inf):
+                attr = np.abs(hi - lo)
+            elif hi == np.inf:
+                attr = hi
+            elif lo == -np.inf:
+                attr = lo
         except KeyError:
             attr = None
         return attr
@@ -212,9 +230,9 @@ class RatioRange(ConditionalAction):
     Parameters
     ----------
     low : float, optional
-        The lower bound of the conditional range. Default: -infinity
+        The lower bound of the conditional range. Default: 0.0
     high : float, optional
-        The upper bound of the conditional range. Default: infinity
+        The upper bound of the conditional range. Default: 1.0
 
     Attributes
     ----------
@@ -228,13 +246,18 @@ class RatioRange(ConditionalAction):
                                          name=name,
                                          next=next)
 
-    def get_attr(self, obj):
+    def get_attr(self, obj, key):
         try:
-            bbox = obj[self.kws['key']]
+            bbox = obj[key]
             split = int(len(bbox) / 2)
-            width = bbox[-1] - bbox[split - 1]
-            height = bbox[-2] - bbox[split-2]
-            ratio = width / height
+            if np.inf not in bbox and -np.inf not in bbox:
+                width = bbox[-1] - bbox[split - 1]
+                height = bbox[-2] - bbox[split-2]
+                ratio = width / height
+            elif np.inf in bbox:
+                ratio = np.inf
+            elif -np.inf in bbox:
+                ratio = -np.inf
         except KeyError:
             ratio = None
         return ratio
