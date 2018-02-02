@@ -1,3 +1,4 @@
+import errno
 import glob
 import logging
 import os
@@ -11,6 +12,30 @@ logging.basicConfig(
     format='%(asctime)s %(message)s',
     datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger(__name__)
+
+
+class InvalidImageFileError(Exception):
+    '''Raised when attempting to load a file that is not an image.'''
+    def __init__(self, path):
+        msg = 'File {} is not a valid image file. '.format(path)
+        msg += 'Check the supplied filepath to ensure it is correct.'
+        super(InvalidImageFileError, self).__init__(msg)
+
+
+class InvalidDataKeyError(Exception):
+    '''Raised when accessing a key in a data file that does not exist.'''
+    def __init__(self, key, path):
+        msg = '"{}" is not a valid key in {}. '.format(key, path)
+        msg += 'Check that the filepath and key are correct.'
+        super(InvalidDataKeyError, self).__init__(msg)
+
+
+class ImageDoesNotExistError(Exception):
+    '''Raised when attempting to load an image file that does not exist.'''
+    def __init__(self, path):
+        msg = 'Image {} does not exist on this filesystem. '.format(path)
+        msg += 'Check the supplied filepath to ensure that it is correct.'
+        super(ImageDoesNotExistError, self).__init__(msg)
 
 
 def load(path, **kws):
@@ -63,12 +88,11 @@ def load_image(path):
 
     try:
         img = imread(path)
-    except IOError as e:
-        logger.error('Could not find image file at {}'.format(path))
-        logger.error(str(e))
     except OSError as e:
-        logger.error('{} is not a valid image file'.format(path))
-        logger.error(str(e))
+        if e.errno == errno.ENOENT:
+            raise ImageDoesNotExistError(path)
+        else:
+            raise InvalidImageFileError(path)
 
     return img
 
@@ -101,18 +125,21 @@ def load_images(path):
 
     files = sorted(glob.glob(path))
 
-    vol = None
-    for i in range(len(files)):
-        img = load_image(files[i])
+    if len(files) > 0:
+        vol = None
+        for i in range(len(files)):
+            img = load_image(files[i])
 
-        if vol is None:
-            vol = np.ndarray(
-                (len(files), img.shape[0], img.shape[1]),
-                dtype=img.dtype)
+            if vol is None:
+                vol = np.zeros(
+                    (len(files), img.shape[0], img.shape[1]),
+                    dtype=img.dtype)
 
-        vol[i] += img
+            vol[i] += img
 
-    return vol
+        return vol
+    else:
+        raise ImageDoesNotExistError(path)
 
 
 def load_npy(path):
@@ -136,12 +163,11 @@ def load_npy(path):
 
     try:
         img = np.load(path)
-    except IOError as e:
-        logger.error('Could not find npy file at {}'.format(path))
-        logger.error(str(e))
     except OSError as e:
-        logger.error('{} is not a valid npy file'.format(path))
-        logger.error(str(e))
+        if e.errno == errno.ENOENT:
+            raise ImageDoesNotExistError(path)
+        else:
+            raise InvalidImageFileError(path)
 
     return img
 
@@ -171,14 +197,17 @@ def load_hdf5(path, key=None):
     try:
         with h5py.File(path, 'r') as f:
             if key is None:
-                key = f.keys()[0]
+                key = list(f.keys())[0]
             img = f[key][:]
-    except IOError as e:
-        logger.error('Could not find HDF5 file at {}'.format(path))
-        logger.error(str(e))
     except OSError as e:
-        logger.error('{} is not a valid HDF5 file'.format(path))
-        logger.error(str(e))
+        if not os.path.isfile(path):
+            raise ImageDoesNotExistError(path)
+        else:
+            raise InvalidImageFileError(path)
+    except IndexError as e:
+        raise InvalidImageFileError(path)
+    except KeyError as e:
+        raise InvalidDataKeyError(key, path)
 
     return img
 
