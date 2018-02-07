@@ -1,9 +1,10 @@
 import pytest
 
 from florin.io import load, load_image, load_images, load_npy, load_hdf5, \
-                      save, save_images, save_hdf5, save_hdf5, \
+                      save, save_image, save_images, save_npy, save_hdf5, \
                       InvalidImageFileError, ImageDoesNotExistError, \
-                      InvalidDataKeyError
+                      InvalidDataKeyError, InvalidImageDimensionError \
+                      InvalidImageDataTypeError, InvalidPermissionsError
 
 import glob
 import os
@@ -22,8 +23,18 @@ def data(shape=None):
     temp = tempfile.mkdtemp()
     imgs = generate_images(shape=shape)
 
+    load_path = os.path.join(temp, 'load')
+    os.mkdir(load_path)
+    save_path = os.path.join(temp, 'save')
+    os.mkdir(save_path)
+    save_path = os.path.join(temp, 'save2')
+    os.mkdir(save_path)
+
     for f in IMAGE_FORMATS:
-        fpath = os.path.join(temp, f)
+        fpath = os.path.join(save_path)
+        os.mkdir(fpath)
+
+        fpath = os.path.join(load_path, f)
         os.mkdir(fpath)
 
         for i in range(len(imgs)):
@@ -47,10 +58,6 @@ def generate_images(shape=None):
         shape = (100, 256, 256)
 
     return np.random.randint(0, 255, size=shape, dtype=np.uint8)
-
-
-def cleanup(temp):
-    shutil.rmtree(temp)
 
 
 def load_image_wrapper(load_fn, temp, imgs):
@@ -132,6 +139,7 @@ def load_npy_wrapper(load_fn, temp, imgs):
 
 def test_load(data):
     temp, imgs = data
+    temp = os.path.join(temp, 'load')
     load_image_wrapper(load, temp, imgs)
     load_images_wrapper(load, temp, imgs)
     load_hdf5_wrapper(load, temp, imgs)
@@ -140,19 +148,114 @@ def test_load(data):
 
 def test_load_image(data):
     temp, imgs = data
+    temp = os.path.join(temp, 'load')
     load_image_wrapper(load_image, temp, imgs)
 
 
 def test_load_images(data):
     temp, imgs = data
+    temp = os.path.join(temp, 'load')
     load_images_wrapper(load_images, temp, imgs)
 
 
 def test_load_h5(data):
     temp, imgs = data
+    temp = os.path.join(temp, 'load')
     load_hdf5_wrapper(load_hdf5, temp, imgs)
 
 
 def test_load_npy(data):
     temp, imgs = data
+    temp = os.path.join(temp, 'load')
     load_npy_wrapper(load_npy, temp, imgs)
+
+
+def save_image_wrapper(save_fn, temp, imgs):
+    # Test with a valid image and path
+    for f in IMAGE_FORMATS:
+        fpath = os.path.join(temp, '.'.join(['img', f]))
+        save_fn(imgs[0], fpath)
+        x = imread(fpath)
+        assert np.all(x == imgs[0])
+
+    # Test that a 3D tif may be saved
+    fpath = os.path.join(temp, 'foo.tif')
+    imsave(imgs, fpath)
+    assert os.path.isfile(fpath)
+    x = imread(fpath)
+    assert np.all(x == imgs)
+
+    # Test that providing no extension saves as a png
+    fpath = os.path.join(temp, 'foo')
+    save_fn(imgs[0], fpath)
+    fpath = '.'.join([fpath, '.png'])
+    assert os.path.isfile(fpath)
+    x = imread(fpath)
+    assert np.all(x == imgs[0])
+
+    # Test that providing an image of invalid dimension does not work
+    with pytest.raises(InvalidImageDimensionError):
+        save_fn(np.arange(10), fpath)
+
+    with pytest.raises(InvalidImageDimensionError):
+        save_fn(imgs, fpath)
+
+    # Test that providing a non-numeric data type doesn't work
+    with pytest.raises(InvalidImageDataTypeError):
+        save_fn(imgs.astype(np.object), fpath)
+
+    # Test that you cannot write to a path without permissions
+    with pytest.raises(InvalidPermissionsError):
+        save_fn(imgs[0], '/root/img.png')
+
+    # Test saving to a non-existent directory
+    with pytest.raises(ImageDoesNotExistError):
+        save_fn(imgs[0], '/foo/bar.tif')
+
+
+def save_images_wrapper(save_fn, temp, imgs):
+    # Test with a valid image
+    for f in IMAGE_FORMATS:
+        fpath = os.path.join(temp, f)
+        save_fn(imgs, fpath)
+
+
+def save_hdf5_wrapper(save_fn, temp, imgs):
+    pass
+
+
+def save_npy_wrapper(save_fn, temp, imgs):
+    pass
+
+
+def test_save(data):
+    temp, imgs = data
+    temp = os.path.join(temp, 'save2')
+    save_image_wrapper(save, temp, imgs)
+    save_images_wrapper(save, temp, imgs)
+    save_hdf5_wrapper(save, temp, imgs)
+    save_npy_wrapper(save, temp, imgs)
+
+
+def test_save_image(data):
+    temp, imgs = data
+    temp = os.path.join(temp, 'save')
+    save_image_wrapper(save_image, temp, imgs)
+
+
+def test_save_images(data):
+    temp, imgs = data
+    temp = os.path.join(temp, 'save')
+    save_images_wrapper(save_images, temp, imgs)
+
+
+def test_save_hdf5(data):
+    temp, imgs = data
+    temp = os.path.join(temp, 'save')
+    save_hdf5_wrapper(save_hdf5, temp, imgs)
+
+
+def test_save_npy(data):
+    temp, imgs = data
+    temp = os.path.join(temp, 'save')
+    save_npy_wrapper(save_npy, temp, imgs)
