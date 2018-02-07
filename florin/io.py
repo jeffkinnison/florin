@@ -38,6 +38,28 @@ class ImageDoesNotExistError(Exception):
         super(ImageDoesNotExistError, self).__init__(msg)
 
 
+class InvalidImageDimensionError(Exception):
+    '''Raised when an image being written is not two dimensional'''
+    def __init__(self, img):
+        msg = 'Image is of invalid dimension {}.\n'.format(img.ndim)
+        super(InvalidImageDimensionError, self).__init__(msg)
+
+
+class InvalidImageDataTypeError(Exception):
+    '''Raised when an image is not of a viable data type.'''
+    def __init__(self, img):
+        msg = 'Image is of invalid data type {}.\n'.format(img.dtype)
+        super(InvalidImageDataTypeError, self).__init__(msg)
+
+
+class InvalidPermissionsError(Exception):
+    '''Raised when an image cannot be accessed due to invalid permissions'''
+    def __init__(self, path):
+        msg = 'Cannot access file at {} due to insufficient permissions.' \
+              .format(path)
+        super(InvalidPermissionsError, self).__init__(msg)
+
+
 def load(path, **kws):
     """Load an image or image volume.
 
@@ -91,6 +113,8 @@ def load_image(path):
     except OSError as e:
         if e.errno == errno.ENOENT:
             raise ImageDoesNotExistError(path)
+        elif e.errno == errno.EACCES or e.errno == errno.EPERM:
+            raise InvalidPermissionsError(path)
         else:
             raise InvalidImageFileError(path)
 
@@ -166,6 +190,8 @@ def load_npy(path):
     except OSError as e:
         if e.errno == errno.ENOENT:
             raise ImageDoesNotExistError(path)
+        elif e.errno == errno.EACCES or e.errno == errno.EPERM:
+            raise InvalidPermissionsError(path)
         else:
             raise InvalidImageFileError(path)
 
@@ -202,6 +228,8 @@ def load_hdf5(path, key=None):
     except OSError as e:
         if not os.path.isfile(path):
             raise ImageDoesNotExistError(path)
+        elif e.errno == errno.EACCES or e.errno == errno.EPERM:
+            raise InvalidPermissionsError(path)
         else:
             raise InvalidImageFileError(path)
     except IndexError as e:
@@ -233,20 +261,54 @@ def save(img, path, **kws):
     `here <http://pillow.readthedocs.io/en/3.4.x/handbook/image-file-formats.html>`_
     """
     fmt = kws['format'] if 'format' in kws else 'png'
+    key = kws['key'] if 'key' in kws else 'seg'
+    create_dir = True if 'create_dir' in kws else False
 
-    if os.path.isdir(path):
-        save_images(vol, path, format=fmt)
+    _, ext = os.path.splitext(path)
+
+    if ext == '.h5' or fmt == 'hdf5':
+        save_hdf5(vol, path, key=key)
+    elif ext == '.npy' or fmt == 'numpy':
+        save_npy(vol, path)
     else:
-        _, ext = os.path.splitext(path)
-        if ext == '.h5' or fmt == 'h5':
-            save_hdf5(vol, path, key=kws['key'] if 'key' in kws else 'stack')
-        elif ext == '.npy' or fmt == 'npy':
-            save_npy(vol, path)
-        else:
-            save_images(vol, path, format=fmt)
+        save_images(vol, path, fmt)
 
 
-def save_images(vol, path, fmt='png'):
+def save_image(img, path):
+    """Save an image to file.
+
+    Parameters
+    ----------
+    img : array-like
+        The image to save.
+    path : str
+        Path to save the image to.
+
+    Notes
+    -----
+    Image format is inferred from the extension at the end of ``path``. If no
+    extension is supplied, PNG format is assumed and appended.
+    """
+    _, ext = os.path.splitext(path)
+    if ext == '':
+        ext = 'png'
+        path = '.'.join([path, ext])
+
+    if img.ndim != 2 or (ext in ['tif', 'tiff'] and img.ndim not in [2, 3]):
+        raise InvalidImageDimensionError(img)
+
+    try:
+        imsave(path, img)
+    except KeyError:
+        raise InvalidImageDataTypeError(img)
+    except OSError as e:
+        if e.errno == errno.EACCES or e.errno == errno.EPERM:
+            raise InvalidPermissionsError(path)
+        elif e.errno == errno.ENOENT:
+            raise ImageDoesNotExistError(path)
+
+
+def save_images(vol, path, format='png'):
     """Save one or more images from an image volume.
 
     Parameters
@@ -255,14 +317,18 @@ def save_images(vol, path, fmt='png'):
         The image/volume to save as images.
     path : str
         The directory to save the images to.
+    fmt : {'png', 'jpg', 'tif'}
+        The image format. Default: 'png'.
     """
-    logger.info('Saving images to {}'.format())
-
+    _, ext = os.path.splitext(path)
+    if ext == '':
+        ext = format
     try:
-        if vol.ndim == 2:
-            imsave(path, vol, format=fmt)
+        if vol.ndim == 2 or (ext == 'tif' and vol.ndim in [2, 3]):
+            save_image(path, vol)
         else:
             for i in range(vol.shape[0]):
+                fpath = '{}.{}'
                 imsave(path, vol[1])
     except (IOError, OSError) as e:
         logger.error('Could not write images to {}'.format(path))
