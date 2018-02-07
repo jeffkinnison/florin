@@ -1,17 +1,10 @@
 import errno
 import glob
-import logging
 import os
 
 import h5py
 import numpy as np
 from scipy.misc import imread, imsave
-
-
-logging.basicConfig(
-    format='%(asctime)s %(message)s',
-    datefmt='%m/%d/%Y %I:%M:%S %p')
-logger = logging.getLogger(__name__)
 
 
 class InvalidImageFileError(Exception):
@@ -106,8 +99,6 @@ def load_image(path):
     -----
     This function will terminate program execution if an error is encountered.
     """
-    logger.info('Loading image at {}'.format(path))
-
     try:
         img = imread(path)
     except OSError as e:
@@ -142,8 +133,6 @@ def load_images(path):
     If a directory is passed as ``path`` with no glob pattern, the function
     will attempt to load every file in the directory as an image.
     """
-    logger.info('Loading images from {}'.format(path))
-
     if os.path.isdir(path) and path.rfind('*') < 0:
         path = os.path.join(path, '*')
 
@@ -183,8 +172,6 @@ def load_npy(path):
     -----
     This function will terminate program execution if an error is encountered.
     """
-    logger.info('Loading numpy array from {}'.format(path))
-
     try:
         img = np.load(path)
     except OSError as e:
@@ -218,8 +205,6 @@ def load_hdf5(path, key=None):
     If ``key`` is not specified, this function will load the data stored at the
     first key in the HDF5 file.
     """
-    logger.info('Loading numpy array from {}'.format(path))
-
     try:
         with h5py.File(path, 'r') as f:
             if key is None:
@@ -347,8 +332,6 @@ def save_hdf5(vol, path, key='stack'):
     key : str, optional
         Name of the dataset to save the volume to. Default: 'stack'.
     """
-    logger.info('Saving volume to {}'.format(path))
-
     try:
         with h5py.File(path, 'r+') as f:
             if key in f:
@@ -371,8 +354,6 @@ def save_npy(vol, path):
     key : str, optional
         Name of the dataset to save the volume to. Default: 'stack'.
     """
-    logger.info('Saving volume to {}'.format(path))
-
     try:
         np.save(path, vol)
     except (IOError, OSError) as e:
