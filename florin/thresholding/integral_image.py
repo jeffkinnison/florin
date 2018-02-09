@@ -34,7 +34,7 @@ def integral_image(img, inplace=False):
 
 
 def integral_image_sum(int_img, shape=None):
-    """
+    """Return the average value of each pixel over a local area
     """
     if shape is None:
         shape = int_img.shape
@@ -65,12 +65,13 @@ def integral_image_sum(int_img, shape=None):
     # Create parity-indexed lower and upper bounds
     bounds = np.array([[lo[i], hi[i]] for i in range(lo.shape[0])])
 
-    # Free up some memory
+    # Free up some memory (depending on how the garbage collector is feeling)
     del grids, lo, hi, img_shape
 
     # Generate the indices of each point in the box around each pixel and
     # determine the parity of the indices.
-    indices = np.array(list(itertools.product([1, 0], repeat=len(int_img.shape))))
+    indices = np.array(list(itertools.product([1, 0],
+                                              repeat=len(int_img.shape))))
     ref = sum(indices[0]) & 1
     parity = np.array([1 if (sum(i) & 1) == ref else -1 for i in indices])
 
@@ -81,7 +82,8 @@ def integral_image_sum(int_img, shape=None):
         sums += parity[i] * int_img[idx]
 
     if return_counts:
-        counts = functools.reduce(np.multiply, bounds[:, 1] - bounds[:, 0])
+        # counts = functools.reduce(np.multiply, bounds[:, 1] - bounds[:, 0])
+        counts = np.prod(bounds[:, 1] - bounds[:, 0], axis=1)
         return sums, counts
     else:
         return sums
