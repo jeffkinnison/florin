@@ -33,8 +33,8 @@ def local_adaptive_thresholding(img, shape=None, threshold=0.25):
     -----
     The original Bradley thresholding was introduced in [1] as a means for
     quickly thresholding images or video. Shahbazi *et al.* [2] extended this
-    method to work for data of arbitrary dimensionality, as described by
-    Tapia [3].
+    method to operate on data of arbitrary dimensionality using the method
+    described by Tapia [3].
 
     References
     ----------
@@ -73,4 +73,4 @@ def local_adaptive_thresholding(img, shape=None, threshold=0.25):
     out[img.ravel() * count <= sums * t] = False
 
     # Return the binarized image in the correct shape
-    return np.reshape(out, img.shape).astype(np.uint8) 
+    return np.reshape(out, img.shape).astype(np.uint8)
