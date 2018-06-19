@@ -4,7 +4,7 @@ import os
 
 import h5py
 import numpy as np
-from scipy.misc import imread, imsave
+from skimage.io import imread, imsave
 
 
 class InvalidImageFileError(Exception):
@@ -279,8 +279,8 @@ def save_image(img, path):
         ext = 'png'
         path = '.'.join([path, ext])
 
-    if img.ndim != 2 or (ext in ['tif', 'tiff'] and img.ndim not in [2, 3]):
-        raise InvalidImageDimensionError(img)
+    #if ext in ['tif', 'tiff'] and img.ndim not in 2:
+    #    raise InvalidImageDimensionError(img)
 
     try:
         imsave(path, img)

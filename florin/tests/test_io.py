@@ -180,13 +180,13 @@ def save_image_wrapper(save_fn, temp, imgs):
 
     # Test that a 3D tif may be saved
     fpath = os.path.join(temp, 'foo.tif')
-    imsave(imgs, fpath)
+    save_fn(imgs, fpath)
     assert os.path.isfile(fpath)
     x = imread(fpath)
     assert np.all(x == imgs)
 
     # Test that providing no extension saves as a png
-    fpath = os.path.join(temp, 'foo')
+    fpath = os.path.join(temp, '')
     save_fn(imgs[0], fpath)
     fpath = '.'.join([fpath, '.png'])
     assert os.path.isfile(fpath)
