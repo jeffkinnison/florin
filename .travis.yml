@@ -9,4 +9,6 @@ before_install:
   - pip install --only-binary=numpy,scipy numpy scipy
   - pip install --upgrade pytest
 install: pip install .
-script: pytest
+script:
+  - cd florin 
+  - pytest
