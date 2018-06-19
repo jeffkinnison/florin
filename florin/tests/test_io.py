@@ -3,7 +3,7 @@ import pytest
 from florin.io import load, load_image, load_images, load_npy, load_hdf5, \
                       save, save_image, save_images, save_npy, save_hdf5, \
                       InvalidImageFileError, ImageDoesNotExistError, \
-                      InvalidDataKeyError, InvalidImageDimensionError \
+                      InvalidDataKeyError, InvalidImageDimensionError, \
                       InvalidImageDataTypeError, InvalidPermissionsError
 
 import glob
@@ -31,7 +31,7 @@ def data(shape=None):
     os.mkdir(save_path)
 
     for f in IMAGE_FORMATS:
-        fpath = os.path.join(save_path)
+        fpath = os.path.join(save_path, f)
         os.mkdir(fpath)
 
         fpath = os.path.join(load_path, f)
@@ -50,7 +50,7 @@ def data(shape=None):
     open(os.path.join(temp, 'invalid.npy'), 'a').close()
 
     yield temp, imgs
-    shutil.rmtree(temp)
+    #shutil.rmtree(temp)
 
 
 def generate_images(shape=None):
@@ -139,9 +139,9 @@ def load_npy_wrapper(load_fn, temp, imgs):
 
 def test_load(data):
     temp, imgs = data
-    temp = os.path.join(temp, 'load')
-    load_image_wrapper(load, temp, imgs)
-    load_images_wrapper(load, temp, imgs)
+    ld = os.path.join(temp, 'load')
+    load_image_wrapper(load, ld, imgs)
+    load_images_wrapper(load, ld, imgs)
     load_hdf5_wrapper(load, temp, imgs)
     load_npy_wrapper(load, temp, imgs)
 
@@ -160,13 +160,13 @@ def test_load_images(data):
 
 def test_load_h5(data):
     temp, imgs = data
-    temp = os.path.join(temp, 'load')
+    #temp = os.path.join(temp, 'load')
     load_hdf5_wrapper(load_hdf5, temp, imgs)
 
 
 def test_load_npy(data):
     temp, imgs = data
-    temp = os.path.join(temp, 'load')
+    #temp = os.path.join(temp, 'load')
     load_npy_wrapper(load_npy, temp, imgs)
 
 
@@ -180,13 +180,13 @@ def save_image_wrapper(save_fn, temp, imgs):
 
     # Test that a 3D tif may be saved
     fpath = os.path.join(temp, 'foo.tif')
-    imsave(imgs, fpath)
+    save_fn(imgs, fpath)
     assert os.path.isfile(fpath)
     x = imread(fpath)
     assert np.all(x == imgs)
 
     # Test that providing no extension saves as a png
-    fpath = os.path.join(temp, 'foo')
+    fpath = os.path.join(temp, '')
     save_fn(imgs[0], fpath)
     fpath = '.'.join([fpath, '.png'])
     assert os.path.isfile(fpath)
