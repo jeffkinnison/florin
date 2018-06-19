@@ -4,7 +4,7 @@ import os
 
 import h5py
 import numpy as np
-from scipy.misc import imread, imsave
+from skimage.io import imread, imsave
 
 
 class InvalidImageFileError(Exception):
@@ -252,11 +252,11 @@ def save(img, path, **kws):
     _, ext = os.path.splitext(path)
 
     if ext == '.h5' or fmt == 'hdf5':
-        save_hdf5(vol, path, key=key)
+        save_hdf5(img, path, key=key)
     elif ext == '.npy' or fmt == 'numpy':
-        save_npy(vol, path)
+        save_npy(img, path)
     else:
-        save_images(vol, path, fmt)
+        save_images(img, path, fmt)
 
 
 def save_image(img, path):
@@ -279,8 +279,8 @@ def save_image(img, path):
         ext = 'png'
         path = '.'.join([path, ext])
 
-    if img.ndim != 2 or (ext in ['tif', 'tiff'] and img.ndim not in [2, 3]):
-        raise InvalidImageDimensionError(img)
+    #if ext in ['tif', 'tiff'] and img.ndim not in 2:
+    #    raise InvalidImageDimensionError(img)
 
     try:
         imsave(path, img)
@@ -310,7 +310,7 @@ def save_images(vol, path, format='png'):
         ext = format
     try:
         if vol.ndim == 2 or (ext == 'tif' and vol.ndim in [2, 3]):
-            save_image(path, vol)
+            save_image(vol, path)
         else:
             for i in range(vol.shape[0]):
                 fpath = '{}.{}'
