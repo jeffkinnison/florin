@@ -24,7 +24,7 @@ def test_tile_2d(data):
     shape = (16, 16)
     step = (16, 16)
 
-    gen = tile(imgs[0, 0:256, 0:256], shape=shape, step=step)
+    gen = tile_2d(imgs[0, 0:256, 0:256], shape=shape, step=step)
 
     r = -1
     for k, t in enumerate(gen):
