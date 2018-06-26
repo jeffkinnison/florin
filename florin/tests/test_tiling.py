@@ -25,11 +25,12 @@ def test_tile_2d(data):
     step = (16, 16)
 
     gen = tile_2d(imgs[0, 0:256, 0:256], shape=shape, step=step)
+    size = (256, 256)    #make sure size and the indeces of imgs above match
 
     r = -1
     for k, t in enumerate(gen):
         
-        if k % step[1] == 0:
+        if k % (size[1]/step[1]) == 0:
             r += 1
             c = 0
         else:
@@ -37,7 +38,30 @@ def test_tile_2d(data):
 
         assert (t == imgs[0, r*step[0]:(r+1)*step[0], c*step[1]:(c+1)*step[1]]).all()
 
-    assert k == (step[0]**2) - 1
+    assert k == ((size[0]*size[1])/(step[0]*step[1])-1)
 
 def test_tile_3d(data):
-    pass
+    imgs = data
+    shape = (10, 16, 16)
+    step = (10, 16, 16)
+    
+    gen = tile_3d(imgs[0:100, 0:256, 0:256], shape=shape, step=step)
+    size = (100, 256, 256)    #make sure size and the indeces of imgs above match
+
+    z = -1
+    for k, t in enumerate(gen):
+
+        
+        if k % ((size[1]*size[2])/(step[1]*step[2])) == 0:      
+            z += 1
+            r = 0
+            c = 0
+        elif k % (size[2]/step[2]) == 0:
+            r += 1
+            c = 0
+        else:
+            c += 1
+
+        assert (t == imgs[z*step[0]:(z+1)*step[0], r*step[1]:(r+1)*step[1], c*step[2]:(c+1)*step[2]]).all()
+
+    assert k == ((size[0]*size[1]*size[2])/(step[0]*step[1]*step[2])-1)
