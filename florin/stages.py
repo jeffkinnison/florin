@@ -28,7 +28,7 @@ class BaseStage(object):
             [self.push_action(action) for action in actions]
 
     def __call__(self, img):
-        for action in actions:
+        for action in self.actions:
             img = action(img)
         return img
 
