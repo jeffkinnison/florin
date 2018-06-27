@@ -13,8 +13,11 @@ FilteringStage
 OutputStage
     Stage for outputting results to file.
 """
-from florin.actions import BaseAction, ThresholdingAction,\
-                           LocalAdaptiveThresholding
+from florin.actions.base import BaseAction, FinalAction
+from florin.actions.thresholding import ThresholdingAction, \
+                                        LocalAdaptiveThresholding
+from florin.actions.morphological import MorphologicalAction
+from florin.actions.conditional import ConditionalAction
 
 
 class BaseStage(object):
@@ -22,7 +25,7 @@ class BaseStage(object):
         self.actions = []
 
         if actions is not None:
-            map(self.push_action, actions)
+            [self.push_action(action) for action in actions]
 
     def __call__(self, img):
         for action in actions:
