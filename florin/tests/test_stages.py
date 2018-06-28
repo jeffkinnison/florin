@@ -1,6 +1,7 @@
 from florin.stages import BaseStage, PreprocessingStage, SegmentationStage, \
                           FilteringStage, OutputStage
 from florin.actions.base import BaseAction
+from florin.actions.thresholding import LocalAdaptiveThresholding
 
 import pytest
 import numpy as np
@@ -29,6 +30,20 @@ def multiply(img):
         for i, depth in enumerate(img):
             for j, width in enumerate(depth):
                 img[i,j] *= 2
+  
+    return img
+
+def subtract(img):
+
+    if len(img.shape) == 3:
+        for i, depth in enumerate(img):
+            for j, width in enumerate(depth):
+                for k, height in enumerate(width):
+                    img[i,j,k] -= 1
+    elif len(img.shape) == 2:
+        for i, depth in enumerate(img):
+            for j, width in enumerate(depth):
+                img[i,j] -= 1
   
     return img
 
@@ -65,6 +80,8 @@ def test_pop_action():
     assert len(stage.actions) == 0
 
 def test_call(data):
+
+    # Single Action Test
     img = data
     old_img = deepcopy(img)
 
@@ -77,8 +94,38 @@ def test_call(data):
 
     assert (old_img*2 == img).all()
 
+    # Multiple Action Test (Associative)
+    img = data
+    old_img = deepcopy(img)
+
+    action = BaseAction(function=multiply)
+    actions = [action, action]
+
+    stage = BaseStage(actions=actions)
+
+    stage(img)
+
+    assert (old_img*4 == img).all()
+
+    # Multiple Action Test (Non-Associative)
+    img = data
+    old_img = deepcopy(img)
+
+    mult = BaseAction(function=multiply)
+    sub = BaseAction(function=subtract)
+    actions = [mult, sub]
+
+    stage = BaseStage(actions=actions)
+
+    stage(img)
+
+    assert (((old_img*2)-1) == img).all()
+
 def test_SegmentationStage():
-    pass
+    
+    stage = SegmentationStage()
+
+    assert isinstance(stage.actions[0], LocalAdaptiveThresholding)
 
 def test_OutputStage():
     pass
