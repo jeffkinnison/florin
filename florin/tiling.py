@@ -5,7 +5,7 @@ Functions
 tile
 """
 import h5py
-
+import numpy as np
 
 class DimensionMismatchError(ValueError):
     pass
@@ -31,10 +31,10 @@ def tile(img, shape=None, step=None, tile_store=None):
     if not all(list(map(lambda x: x > 0, shape))):
         raise InvalidTileShapeError()
 
-    if not all(list(map(lambda x: x > 0, shape))):
+    if not all(list(map(lambda x: x > 0, step))):
         raise InvalidTileStepError()
 
-    if not all(list(map(lambda x, y: x >= y, zip(shape, step)))):
+    if not all(list(map(lambda x, y: x >= y, shape, step))):
         raise ShapeStepMismatchError()
 
     if len(shape) < img.ndim:
