@@ -1,6 +1,6 @@
 import pytest
 
-from florin.actions.tests.test_base import TestBaseAction
+from test_base import TestBaseAction
 from florin.actions.morphological import MorphologicalAction, BinaryDilation, \
                                          BinaryErosion, BinaryOpening, \
                                          BinaryClosing, BinaryFill, \

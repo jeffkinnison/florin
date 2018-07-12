@@ -1,6 +1,6 @@
 import pytest
 
-from florin.actions.tests.test_base import TestBaseAction, InvalidActionError
+from test_base import TestBaseAction, InvalidActionError
 from florin.actions.conncomp import ConnectedComponents, DimensionMismatchError
 
 import numpy as np

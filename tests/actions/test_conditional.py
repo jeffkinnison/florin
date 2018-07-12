@@ -1,6 +1,6 @@
 import pytest
 
-from florin.actions.tests.test_base import TestBaseAction
+from test_base import TestBaseAction
 from florin.actions.conditional import ConditionalAction, AreaRange, \
                                        WidthRange, HeightRange, DepthRange, \
                                        RatioRange, ExtentRange, \
