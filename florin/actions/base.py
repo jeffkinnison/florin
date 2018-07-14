@@ -3,9 +3,9 @@
 Classes
 -------
 BaseAction
+FinalAction
 InvalidActionError
 NoOpError
-FinalAction
 """
 
 
@@ -64,7 +64,7 @@ class BaseAction(object):
 
     """
 
-    def __init__(self, function=None, name=None, next=None, *args, **kws):
+    def __init__(self, *args, function=None, name=None, next=None, **kws):
         self.name = str(name) if name is not None else 'base'
         self.__next = next
         self.function = function
@@ -94,3 +94,9 @@ class BaseAction(object):
     @next.deleter
     def next(self):
         self.__next = None
+
+    def serialize(self):
+        return {
+            'name': self.name,
+            'args': self.args,
+            'kws': sel

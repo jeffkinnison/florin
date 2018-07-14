@@ -13,11 +13,14 @@ FilteringStage
 OutputStage
     Stage for outputting results to file.
 """
-from florin.actions.base import BaseAction, FinalAction
-from florin.actions.thresholding import ThresholdingAction, \
-                                        LocalAdaptiveThresholding
-from florin.actions.morphological import MorphologicalAction
-from florin.actions.conditional import ConditionalAction
+import florin.actions
+
+
+class InvalidActionException(Exception):
+    """Raised when using a non-subclass of BaseAction as an action"""
+    def __init__(self, obj):
+        msg = '{} is not a subclass of BaseAction.'
+        super(InvalidActionException, self).__init__(msg.format(obj))
 
 
 class BaseStage(object):
@@ -33,8 +36,10 @@ class BaseStage(object):
         return img
 
     def push_action(self, action):
-        if not isinstance(action, BaseAction):
-            print('Ya done goofed!')
+        if not isinstance(action, (florin.actions.BaseAction, dict)):
+            raise InvalidActionException(action)
+        if isinstance(action, dict):
+            action = florin.actions.deserialize(action)
         self.actions.append(action)
 
     def pop_action(self, action):
@@ -43,6 +48,62 @@ class BaseStage(object):
         except IndexError:
             action = None
         return action
+
+    def serialize(self):
+        """Convert a stage into a JSON-serializable format.
+
+        Returns
+        -------
+        serialized : dict
+            JSON-serializable representation of the stage.
+
+        See Also
+        --------
+        florin.stages.BaseStage.serialize
+        florin.actions.BaseAction.serialize
+        """
+        config = {'actions': []}
+        for action in self.actions:
+            config['actions'].append(action.serialize())
+        return {'name': self.__class__.__name__, 'config': config}
+
+    @staticmethod
+    def deserialize(obj, custom_objs=None):
+        """Deserialize a stage from a dictionary format.
+
+        Parameters
+        ----------
+        name : str
+            Class name. Will always be present in objects serialized by
+            BaseAction.serialize.
+        config : dict
+            Arguments to instantiate the stage.
+        custom_objs : dict, optional
+            A collection of custom subclasses of BaseStage indexed by class
+            name.
+
+        Returns
+        -------
+        stage
+            The stage created from class ``name`` and initialized with
+            ``config``.
+
+        See Also
+        --------
+        florin.stages.BaseStage.serialize
+        """
+        if custom_objs is None:
+            custom_objs = {}
+
+        # If deserializing a custom object, pull the class from ``custom_objs``
+        # and instantiate. Otherwise, search this module for the corresponding
+        # class definition.
+        if obj['name'] in custom_objs:
+            instance = custom_objs[obj['name']](**obj['config'])
+        else:
+            instance = getattr(__module__, obj['name'])(**obj['config'])
+
+        return instance
 
 
 class PreprocessingStage(BaseStage):
@@ -57,35 +118,36 @@ class SegmentationStage(BaseStage):
 
         thresh = False
         for action in actions:
-            if isinstance(action, ThresholdingAction):
+            if isinstance(action, florin.actions.ThresholdingAction):
                 thresh = True
 
         if not thresh:
-            thresh = LocalAdaptiveThresholding(shape=shape,
-                                               threshold=threshold)
+            thresh = florin.actions.LocalAdaptiveThresholding(
+                shape=shape,
+                threshold=threshold)
             actions = [thresh] + actions
 
         super(SegmentationStage, self).__init__(actions=actions)
 
 
-class FilteringStage(BaseStage):
+class IdentificationStage(BaseStage):
     def __init__(self, actions=None):
-        super(FilteringStage, self).__init__(actions=actions)
+        super(IdentificationStage, self).__init__(actions=actions)
 
 
-class OutputStage(BaseStage):
+class ReconstructionStage(BaseStage):
     def __init__(self, filename='florin.h5', actions=None):
         if actions is None:
             actions = []
 
         output = False
         for action in actions:
-            if isinstance(action, OutputAction):
+            if isinstance(action, florin.actions.OutputAction):
                 output = True
                 break
 
         if not output:
-            output = HDF5Output(filename=filename)
+            output = florin.actions.HDF5Output(filename=filename)
             actions.append(output)
 
-        super(OutputStage, self).__init__(actions=actions)
+        super(ReconstructionStage, self).__init__(actions=actions)
