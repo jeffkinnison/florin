@@ -49,19 +49,19 @@ def local_adaptive_thresholding(img, shape=None, threshold=0.25):
     # Determine the shape of the bounding box around reach
     if shape is None:
         shape = np.round(np.asarray(img.shape) / 8)
-    elif isinstance(s, (list, tuple)):
-        shape = np.asarray(s)
+    elif isinstance(shape, (list, tuple)):
+        shape = np.asarray(shape)
 
     # Ensure that the threshold is valid.
-    if t is None:
-        t = 15.0
+    if threshold is None:
+        threshold = 15.0
     else:
-        t = float(t)
+        threshold = float(threshold)
 
-    if t > 1.0 and t <= 100.0:
-        t = (100.0 - t) / 100.0
-    elif t >= 0.0 and t <= 1.0:
-        t = 1.0 - t
+    if threshold > 1.0 and threshold <= 100.0:
+        threshold = (100.0 - threshold) / 100.0
+    elif threshold >= 0.0 and threshold <= 1.0:
+        threshold = 1.0 - threshold
     else:
         raise InvalidThresholdError(threshold)
 
@@ -70,7 +70,7 @@ def local_adaptive_thresholding(img, shape=None, threshold=0.25):
 
     # Compute the thresholding and binarize the image
     out = np.ones(np.prod(img.shape), dtype=np.bool)
-    out[img.ravel() * count <= sums * t] = False
+    out[img.ravel() * count <= sums * threshold] = False
 
     # Return the binarized image in the correct shape
     return np.reshape(out, img.shape).astype(np.uint8)
