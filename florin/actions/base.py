@@ -64,7 +64,7 @@ class BaseAction(object):
 
     """
 
-    def __init__(self, *args, function=None, name=None, next=None, **kws):
+    def __init__(self, function=None, name=None, next=None, *args, **kws):
         self.name = str(name) if name is not None else 'base'
         self.__next = next
         self.function = function
@@ -100,3 +100,4 @@ class BaseAction(object):
             'name': self.name,
             'args': self.args,
             'kws': sel
+        }

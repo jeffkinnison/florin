@@ -5,7 +5,7 @@ from .conditional import *
 from .conncomp import *
 from .intensity import *
 from .morphological import *
-from .output import *
+# from .output import *
 from .thresholding import *
 from .tiling import *
 
@@ -17,6 +17,6 @@ def deserialize(obj, custom_objs=None):
     if obj['name'] in custom_objs:
         instance = custom_objs[obj['name']](**obj['config'])
     else:
-        instance = getattr(__module__, obj['name'])(**obj['config'])
+        instance = globals()[obj['name']](**obj['config'])
 
     return instance
