@@ -40,27 +40,31 @@ def integral_image_sum(int_img, shape=None):
         shape = int_img.shape
 
     # Create meshgrids to perform vectorized calculations with index offsets
-    grids = np.meshgrid(*[np.arange(i) for i in int_img.shape[::-1]])
-    grids = np.array(grids[::-1])
-    grids = grids.reshape([grids.shape[0], np.product(grids.shape[1:])])
+    grids = np.meshgrid(*[np.arange(i) for i in int_img.shape[::-1]],
+                        indexing='ij', sparse=True)
+    grids = np.asarray(grids)
+    #grids = grids.reshape([grids.shape[0], np.product(grids.shape[1:])])
 
     # Prepare the shape of the 'bounding box' s
     if not isinstance(s, np.ndarray):
         s = np.asarray(s)
-        s = np.round(s / 2).astype(np.uint32).reshape((s.shape[0], 1))
+    s = np.round(s / 2).astype(np.uint32).reshape((s.size, 1))
 
     # Set up vectorized bounds checking
-    img_shape = int_img.shape
-    img_shape = np.array([np.full(grids[i], img_shape[i])
-                          for i in range(len(img_shape))])
+    img_shape = np.asarray(int_img.shape)
+    # img_shape = np.array([np.full(grids[i], img_shape[i])
+    #                       for i in range(len(img_shape))])
 
     # Set the lower and upper bounds for the rectangle around each pixel
-    lo = grids.copy() - s
-    lo[lo < 0] = 0
+    lo = (grids.copy() - s.T)[0]
+    # lo[lo < 0] = 0
 
-    hi = grids + s
-    x = hi >= img_shape
-    hi[x] = (img_shape[x] - 1)
+    hi = (grids + s.T)[0]
+
+    for i in range(len(lo)):
+        lo[i][lo[i] < 0] = 0
+        x = hi[i] >= img_shape[i]
+        hi[i][x] = (img_shape[i] - 1)
 
     # Create parity-indexed lower and upper bounds
     bounds = np.array([[lo[i], hi[i]] for i in range(lo.shape[0])])
@@ -82,8 +86,9 @@ def integral_image_sum(int_img, shape=None):
         sums += parity[i] * int_img[idx]
 
     if return_counts:
-        # counts = functools.reduce(np.multiply, bounds[:, 1] - bounds[:, 0])
-        counts = np.prod(bounds[:, 1] - bounds[:, 0], axis=1)
+        counts = bounds[:, 1] - bounds[:, 0]
+        counts[counts == 0] = 1
+        counts = functools.reduce(np.multiply, counts)
         return sums, counts
     else:
         return sums
