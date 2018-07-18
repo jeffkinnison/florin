@@ -66,11 +66,11 @@ def local_adaptive_thresholding(img, shape=None, threshold=0.25):
         raise InvalidThresholdError(threshold)
 
     # Get the summed area table and counts, as per Bradley thresholding
-    sums, counts = integral_image_sum(integral_image(img, shape=shape))
+    sums, counts = integral_image_sum(integral_image(img), shape=shape)
 
     # Compute the thresholding and binarize the image
     out = np.ones(np.prod(img.shape), dtype=np.bool)
-    out[img.ravel() * count <= sums * threshold] = False
+    out[img.ravel() * counts.ravel() <= sums.ravel() * threshold] = False
 
     # Return the binarized image in the correct shape
     return np.reshape(out, img.shape).astype(np.uint8)
