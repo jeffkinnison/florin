@@ -43,7 +43,7 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
         shape = int_img.shape
 
     # Create meshgrids to perform vectorized calculations with index offsets
-    grids = np.meshgrid(*[np.arange(i) for i in int_img.shape[::-1]],
+    grids = np.meshgrid(*[np.arange(i) for i in int_img.shape],
                         indexing='ij', sparse=True)
     grids = np.asarray(grids)
     #grids = grids.reshape([grids.shape[0], np.product(grids.shape[1:])])
