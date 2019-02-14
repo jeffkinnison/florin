@@ -8,6 +8,7 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 
 from utils import threshold_bradley_nd, load_volume, save_imgs
+from utils2 import segment
 
 from florin.io import *
 from florin.tiling import tile_3d
@@ -56,14 +57,13 @@ def main():
     args = parse_args()
 
     print("Loading image volume")
-    #vol = load_volume(args.input)
-    vol = load_images(args.input)
+    vol = load(args.input)
 
     if args.show:
         plt.imshow(vol[0], cmap='Greys_r')
         plt.show()
 
-    # What is the intent of this?
+    # Preprocess shape and step arguments
     print("Prepping threshold subvolume shape")
     if len(args.shape) < len(vol.shape):
         shape = list(vol.shape[:len(vol.shape) - len(args.shape)])
@@ -78,49 +78,24 @@ def main():
         step = args.step
 
     print("Thresholding subvolumes")
-    step = args.step
+    #step = args.step
 
-    thresh = []
-    for img in tile_3d(vol, shape, step): # What shape should we use? Shouldn't step be the same as shape?
-        thresh.append(local_adaptive_thresholding(img, shape, args.threshold)) # Placeholder
-    # How do we untile?
+    # Tile and threshold. Perhaps this returns a singular object? Can the tiling/untiling be hidden?
+    tiles = []
+    for img, i, j, k in tile_3d(vol, shape, step): 
+        tiles.append((local_adaptive_thresholding(img, shape, args.threshold), i, j, k))
 
-    #thresh = np.zeros(vol.shape)
-    #for i in range(0, vol.shape[0], step[0] if step else vol.shape[0]):
-    #    endi = i + step[0] if i + step[0] < vol.shape[0] else vol.shape[0]
-    #    for j in range(0, vol.shape[1], int(step[1] / 2) if step else vol.shape[1]):
-    #        endj = j + step[1] if j + step[1] < vol.shape[1] else vol.shape[1]
-    #        for k in range(0, vol.shape[2], int(step[2] / 2) if step else vol.shape[2]):
-    #            endk = k + step[2] if k + step[2] < vol.shape[2] else vol.shape[2]
-    #            subvol = np.copy(vol[i:endi, j:endj, k:endk])
-    #            subvol = threshold_bradley_nd(subvol, s=(4, *shape[1:]), t=args.threshold)
-    #            subvol = np.abs(1 - subvol) if np.max(subvol) > 0 else subvol
-    #            subvol = binary_fill_holes(subvol)
-    #            subvol[subvol > 0] = 255
-    #            thresh[i:endi, j:endj, k:endk] += subvol
+    # Untile. Can this be made into a function itself?
+    thresh = np.zeros(vol.shape)
+    for tile in tiles:
+        thresh[tile[1]:tile[1]+shape[0],tile[2]:tile[2]+shape[1],tile[3]:tile[3]+shape[2]] += tile[0]
 
     if args.show:
         plt.imshow(thresh[0], cmap='Greys_r')
         plt.show()
 
-    cells = np.zeros(thresh.shape)
-    vas = np.zeros(thresh.shape)
-
-    labels = label(thresh, connectivity=1)
-    labels = remove_small_objects(labels, 3, in_place=True)
-    objs = regionprops(labels, intensity_image=vol)
-
-    for obj in objs:
-        coords = (obj['coords'][:, 0], obj['coords'][:, 1], obj['coords'][:, 2])
-        depth = obj['bbox'][3] - obj['bbox'][0]
-        height = obj['bbox'][4] - obj['bbox'][1]
-        width = obj['bbox'][5] - obj['bbox'][2]
-        ratio = max(height, width) / min(height, width)
-        centroid = tuple(obj['coords'].mean(axis=0))
-        if depth < 25 and width < 20 and height < 20 and ratio > 0.6:
-            cells[coords] += 255
-        else:
-            vas[coords] += 255
+    # Segmentation
+    cells, vas = segment(vol, thresh, height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6))
 
     if args.show:
         f, ax = plt.subplots(1, 2)

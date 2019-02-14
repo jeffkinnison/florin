@@ -283,7 +283,7 @@ def save_image(img, path):
     #    raise InvalidImageDimensionError(img)
 
     try:
-        imsave(path, img)
+        imsave(path, img, format=ext)
     except KeyError:
         raise InvalidImageDataTypeError(img)
     except OSError as e:
@@ -314,7 +314,7 @@ def save_images(vol, path, format='png'):
         else:
             for i in range(vol.shape[0]):
                 fpath = '{}.{}'
-                imsave(path, vol[1])
+                imsave(path, vol[1], format=format)
     except (IOError, OSError) as e:
         logger.error('Could not write images to {}'.format(path))
         logger.error(str(e))

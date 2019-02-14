@@ -50,6 +50,17 @@ def tile(img, shape=None, step=None, tile_store=None):
 
 
 def tile_3d(img, shape, step, tile_store=None):
+    #print("Prepping threshold subvolume shape")
+    #if len(shape) < len(shape):
+    #    shape_ = list(img.shape[:len(img.shape) - len(shape)])
+    #    shape_.extend(shape)
+    #    shape = shape_
+
+    #if len(args.step) < len(shape):
+    #    step_ = list(img.shape[:len(img.shape) - len(step)])
+    #    step_.extend(step)
+    #    step = step_
+
     for i in range(0, img.shape[0], step[0]):
         endi = i + shape[0]
         if endi > img.shape[0]:
@@ -62,7 +73,7 @@ def tile_3d(img, shape, step, tile_store=None):
                 endk = k + shape[2]
                 if endk > img.shape[2]:
                     endk = img.shape[2]
-                yield np.copy(img[i:endi, j:endj, k:endk])
+                yield (np.copy(img[i:endi, j:endj, k:endk]), i, j, k)
 
 
 def tile_2d(img, shape, step, tile_store=None):
