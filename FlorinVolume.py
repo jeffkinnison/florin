@@ -16,7 +16,7 @@ class FlorinVolume:
     def tile(self, shape, step):
         return FlorinTiles(tile_3d(self.vol, shape, step))
 
-    def tile_3d(self, shape, step):
+    def tile_3d(self, shape, step): # TODO: Move this to FlorinTile
         #print("Prepping threshold subvolume shape")
         #if len(shape) < len(shape):
         #    shape_ = list(img.shape[:len(img.shape) - len(shape)])
