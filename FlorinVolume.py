@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import numpy as np
 from scipy.ndimage import binary_dilation, binary_erosion, binary_fill_holes, generate_binary_structure, binary_opening, binary_closing
 from skimage.measure import label, regionprops
@@ -29,4 +30,3 @@ class FlorinVolume:
 
     def save (self, path):
         pass
-
