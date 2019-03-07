@@ -13,9 +13,10 @@ from utils2 import segment
 from florin.io import *
 from florin.tiling import tile_3d
 from florin.thresholding.lat import local_adaptive_thresholding
+from florin.thresholding.lat import threshold
 
-import FlorinVolume
-import FlorinTile
+import florin.FlorinVolume
+import florin.FlorinTile
 
 
 def parse_args(args=None):
@@ -60,7 +61,7 @@ def main():
     args = parse_args()
 
     print("Loading image volume")
-    vol = FlorinVolume.FlorinVolume(path = args.input)
+    vol = florin.FlorinVolume.FlorinVolume(path = args.input)
 
     if args.show:
         plt.imshow(vol.volume[0], cmap='Greys_r')
@@ -84,7 +85,8 @@ def main():
     #step = args.step
 
     tiles = vol.tile(shape, step)
-    thresh_tiles = tiles.threshold(args.threshold)
+    #thresh_tiles = tiles.threshold(args.threshold)
+    thresh_tiles = tiles.map(threshold(args.threshold))
     thresh = thresh_tiles.untile().volume
     vol = vol.volume
 

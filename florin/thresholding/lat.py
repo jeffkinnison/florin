@@ -9,6 +9,11 @@ class InvalidThresholdError(ValueError):
         msg += 'Supplied threshold was {}'.format(t)
         super(InvalidThresholdError, self).__init__(msg)
 
+def threshold (threshold):
+    from florin.FlorinTile import FlorinTile
+    def threshold_closure(tile):
+        return FlorinTile(local_adaptive_thresholding(tile.data, tile.tile_shape, threshold), tile.address)
+    return threshold_closure
 
 def local_adaptive_thresholding(img, shape=None, threshold=0.25):
     """Compute an n-dimensional Bradley thresholding of an image or volume.

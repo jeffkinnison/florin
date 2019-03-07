@@ -10,40 +10,37 @@ from florin.io import *
 from florin.tiling import tile_3d
 from florin.thresholding.lat import local_adaptive_thresholding
 
-import FlorinVolume
+import florin.FlorinVolume
 
 class FlorinTiledVolume:
     def __init__ (self, generator, volume_shape, tile_shape, step):
-        self.generator = generator
+        self.tiles = generator
         self.volume_shape = volume_shape
         self.tile_shape = tile_shape
         self.step = step
-        self.tiles = self.tile_gen()
 
-    def tile_gen (self):
-        for data in self.generator:
-            if type(data) == FlorinTile:
-                yield data
-            else:
-                yield FlorinTile(data[0], (data[1], data[2], data[3]))
+    def map (self, func):
+        return FlorinTiledVolume((func(tile) for tile in self.tiles), self.volume_shape, self.tile_shape, self.step)
 
     def threshold (self, threshold):
-        return FlorinTiledVolume((tile.threshold(threshold) for tile in self.tiles), self.volume_shape, self.tile_shape, self.step)
+        def threshold_closure(tile):
+            return tile.threshold(threshold)
+        return self.map(threshold_closure)
 
     def untile (self):
-        vol = FlorinVolume.FlorinVolume(shape = self.volume_shape)
+        vol = florin.FlorinVolume.FlorinVolume(shape = self.volume_shape)
         for tile in self.tiles:
             vol.volume[tile.address[0]:tile.address[0]+tile.tile_shape[0],\
                        tile.address[1]:tile.address[1]+tile.tile_shape[1],\
-                       tile.address[2]:tile.address[2]+tile.tile_shape[2]] += tile.img
+                       tile.address[2]:tile.address[2]+tile.tile_shape[2]] += tile.data
         return vol
 
 
 class FlorinTile:
-    def __init__ (self, img, address):
+    def __init__ (self, data, address):
         self.address = address
-        self.img = img
-        self.tile_shape = img.shape
+        self.data = data
+        self.tile_shape = data.shape
 
     def threshold (self, threshold):
-        return FlorinTile(local_adaptive_thresholding(self.img, self.tile_shape, threshold), self.address)
+        return FlorinTile(local_adaptive_thresholding(self.data, self.tile_shape, threshold), self.address)

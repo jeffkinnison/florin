@@ -10,7 +10,7 @@ from florin.io import *
 from florin.tiling import tile_3d
 from florin.thresholding.lat import local_adaptive_thresholding
 
-import FlorinTile
+import florin.FlorinTile
 
 class FlorinVolume:
     def __init__ (self, path = None, shape = None):
@@ -25,7 +25,7 @@ class FlorinVolume:
         self.volume_shape = self.volume.shape
 
     def tile (self, tile_shape, step):
-        return FlorinTile.FlorinTiledVolume(tile_3d(self.volume, tile_shape, step), self.volume_shape, tile_shape, step)
+        return florin.FlorinTile.FlorinTiledVolume(tile_3d(self.volume, tile_shape, step), self.volume_shape, tile_shape, step)
 
     def save (self, path):
         pass
