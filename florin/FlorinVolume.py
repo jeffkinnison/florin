@@ -14,18 +14,19 @@ import florin.FlorinTile
 
 class FlorinVolume:
     def __init__ (self, path = None, shape = None):
+        self.data = {}
         if path is None:
             self.volume_shape = shape
-            self.volume = None if shape == None else np.zeros(shape)
+            self.data['image'] = None if shape == None else np.zeros(shape)
         else:
             self.load(path)
 
     def load (self, path):
-        self.volume = load(path)
-        self.volume_shape = self.volume.shape
+        self.data['image'] = load(path)
+        self.volume_shape = self.data['image'].shape
 
     def tile (self, tile_shape, step):
-        return florin.FlorinTile.FlorinTiledVolume(tile_3d(self.volume, tile_shape, step), self.volume_shape, tile_shape, step)
+        return florin.FlorinTile.FlorinTiledVolume(tile_3d(self.data['image'], tile_shape, step), self.volume_shape, tile_shape, step)
 
     def save (self, path):
         pass

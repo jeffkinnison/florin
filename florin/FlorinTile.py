@@ -13,6 +13,7 @@ from florin.thresholding.lat import local_adaptive_thresholding
 import florin.FlorinVolume
 
 class FlorinTiledVolume:
+    #TODO: Make subscriptable
     def __init__ (self, generator, volume_shape, tile_shape, step):
         self.tiles = generator
         self.volume_shape = volume_shape
@@ -20,6 +21,7 @@ class FlorinTiledVolume:
         self.step = step
 
     def map (self, func):
+        # TODO: Edit in place
         return FlorinTiledVolume((func(tile) for tile in self.tiles), self.volume_shape, self.tile_shape, self.step)
 
     def threshold (self, threshold):
@@ -30,9 +32,11 @@ class FlorinTiledVolume:
     def untile (self):
         vol = florin.FlorinVolume.FlorinVolume(shape = self.volume_shape)
         for tile in self.tiles:
-            vol.volume[tile.address[0]:tile.address[0]+tile.tile_shape[0],\
-                       tile.address[1]:tile.address[1]+tile.tile_shape[1],\
-                       tile.address[2]:tile.address[2]+tile.tile_shape[2]] += tile.data
+            for k in tile.data.keys():
+                if k not in vol.data.keys(): vol.data[k] = np.zeros(self.volume_shape)
+                vol.data[k][tile.address[0]:tile.address[0]+tile.tile_shape[0],\
+                            tile.address[1]:tile.address[1]+tile.tile_shape[1],\
+                            tile.address[2]:tile.address[2]+tile.tile_shape[2]] += tile.data[k]
         return vol
 
 
@@ -40,7 +44,7 @@ class FlorinTile:
     def __init__ (self, data, address):
         self.address = address
         self.data = data
-        self.tile_shape = data.shape
+        self.tile_shape = data['image'].shape
 
     def threshold (self, threshold):
-        return FlorinTile(local_adaptive_thresholding(self.data, self.tile_shape, threshold), self.address)
+        return FlorinTile({'image':local_adaptive_thresholding(self.data['image'], self.tile_shape, threshold)}, self.address)

@@ -2,6 +2,12 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 import numpy as np
 
+def segment_tile(height_bounds, width_bounds, depth_bounds, ratio_bounds):
+    def segment_closure(tile):
+        (tile.data['cells'], tile.data['vas']) = segment(tile.data['image'], tile.data['threshold'], height_bounds, width_bounds, depth_bounds, ratio_bounds)
+        return tile
+    return segment_closure
+
 def segment(vol, thresh, height_bounds, width_bounds, depth_bounds, ratio_bounds):
     cells = np.zeros(thresh.shape)
     vas = np.zeros(thresh.shape)

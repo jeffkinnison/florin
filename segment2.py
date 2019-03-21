@@ -8,7 +8,7 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 
 from utils import threshold_bradley_nd, load_volume, save_imgs
-from utils2 import segment
+from utils2 import segment, segment_tile
 
 from florin.io import *
 from florin.tiling import tile_3d
@@ -64,7 +64,7 @@ def main():
     vol = florin.FlorinVolume.FlorinVolume(path = args.input)
 
     if args.show:
-        plt.imshow(vol.volume[0], cmap='Greys_r')
+        plt.imshow(vol.data['image'][0], cmap='Greys_r')
         plt.show()
 
     # Preprocess shape and step arguments
@@ -86,21 +86,22 @@ def main():
 
     tiles = vol.tile(shape, step)
     #thresh_tiles = tiles.threshold(args.threshold)
-    thresh_tiles = tiles.map(threshold(args.threshold))
-    thresh = thresh_tiles.untile().volume
-    vol = vol.volume
+    tiles = tiles.map(threshold(args.threshold))
+    tiles = tiles.map(segment_tile(height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6)))
+    untiled = tiles.untile()
 
     if args.show:
-        plt.imshow(thresh[0], cmap='Greys_r')
+        plt.imshow(untiled.data['threshold'][0], cmap='Greys_r')
         plt.show()
 
     # Segmentation
-    cells, vas = segment(vol, thresh, height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6))
+    #cells, vas = segment(vol, thresh, height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6))
+    cells, vas = (untiled.data['cells'], untiled.data['vas'])
 
     if args.show:
         f, ax = plt.subplots(1, 2)
-        ax[0].imshow(cells[0], cmap='Greys_r')
-        ax[1].imshow(vas[0], cmap='Greys_r')
+        ax[0].imshow(untiled.data['cells'][0], cmap='Greys_r')
+        ax[1].imshow(untiled.data['vas'][0], cmap='Greys_r')
         plt.show()
 
     print("Saving segmentation")
