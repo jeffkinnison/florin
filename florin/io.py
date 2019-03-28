@@ -279,18 +279,21 @@ def save_image(img, path):
         ext = 'png'
         path = '.'.join([path, ext])
 
-    #if ext in ['tif', 'tiff'] and img.ndim not in 2:
-    #    raise InvalidImageDimensionError(img)
+    plugin = None
+    if ext in ['tif', 'tiff']:
+        plugin = 'tifffile'
 
     try:
-        imsave(path, img)
+        imsave(path, img, plugin=plugin)
     except KeyError:
         raise InvalidImageDataTypeError(img)
-    except OSError as e:
+    except (IOError, OSError) as e:
         if e.errno == errno.EACCES or e.errno == errno.EPERM:
             raise InvalidPermissionsError(path)
         elif e.errno == errno.ENOENT:
             raise ImageDoesNotExistError(path)
+    except ValueError as e:
+        raise InvalidImageDimensionError(img)
 
 
 def save_images(vol, path, format='png'):
@@ -305,19 +308,24 @@ def save_images(vol, path, format='png'):
     fmt : {'png', 'jpg', 'tif'}
         The image format. Default: 'png'.
     """
-    _, ext = os.path.splitext(path)
+    path, ext = os.path.splitext(path)
     if ext == '':
         ext = format
     try:
-        if vol.ndim == 2 or (ext == 'tif' and vol.ndim in [2, 3]):
+        if vol.ndim == 2:
             save_image(vol, path)
-        else:
+        elif vol.ndim == 3:
+            zeros = int(np.log10(vol.shape[0])) + 1
             for i in range(vol.shape[0]):
-                fpath = '{}.{}'
-                imsave(path, vol[1])
+                fpath = ''.join([path, str(i).zfill(zeros)])
+                save_image(vol[i], fpath)
+    except TypeError:
+        raise InvalidImageDataTypeError(vol)
     except (IOError, OSError) as e:
-        logger.error('Could not write images to {}'.format(path))
-        logger.error(str(e))
+        if e.errno == errno.EACCES or e.errno == errno.EPERM:
+            raise InvalidPermissionsError(path)
+        elif e.errno == errno.ENOENT:
+            raise ImageDoesNotExistError(path)
 
 
 def save_hdf5(vol, path, key='stack'):
