@@ -80,7 +80,7 @@ def local_adaptive_thresholding(img, shape=None, threshold=0.25):
     out[img.ravel() * counts.ravel() <= sums.ravel() * threshold] = False
 
     # Return the binarized image in the correct shape
-    return np.reshape(out, img.shape).astype(np.uint8)
+    return np.abs(1 - np.reshape(out, img.shape)).astype(np.uint8)
 
 def integral_image(img, inplace=False):
     """Compute the integral image of an image or image volume.
