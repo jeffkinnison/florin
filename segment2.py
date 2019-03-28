@@ -82,20 +82,17 @@ def main():
         step = args.step
 
     print("Thresholding subvolumes")
-    #step = args.step
 
     tiles = vol.tile(shape, step)
-    #thresh_tiles = tiles.threshold(args.threshold)
-    tiles = tiles.map(threshold(args.threshold))
-    tiles = tiles.map(segment_tile(height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6)))
-    untiled = tiles.untile()
+    tiles.add(threshold(args.threshold))
+    tiles.add(segment_tile(height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6)))
+    untiled = tiles.join()
 
     if args.show:
         plt.imshow(untiled.data['threshold'][0], cmap='Greys_r')
         plt.show()
 
     # Segmentation
-    #cells, vas = segment(vol, thresh, height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6))
     cells, vas = (untiled.data['cells'], untiled.data['vas'])
 
     if args.show:

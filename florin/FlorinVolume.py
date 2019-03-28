@@ -30,3 +30,12 @@ class FlorinVolume:
 
     def save (self, path):
         pass
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def keys(self):
+        return self.data.keys()

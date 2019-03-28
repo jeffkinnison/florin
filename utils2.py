@@ -4,7 +4,7 @@ import numpy as np
 
 def segment_tile(height_bounds, width_bounds, depth_bounds, ratio_bounds):
     def segment_closure(tile):
-        (tile.data['cells'], tile.data['vas']) = segment(tile.data['image'], tile.data['threshold'], height_bounds, width_bounds, depth_bounds, ratio_bounds)
+        (tile['cells'], tile['vas']) = segment(tile['image'], tile['threshold'], height_bounds, width_bounds, depth_bounds, ratio_bounds)
         return tile
     return segment_closure
 
