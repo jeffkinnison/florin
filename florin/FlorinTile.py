@@ -34,13 +34,14 @@ class FlorinTiledVolume:
                        tile.address[2]:tile.address[2]+tile.tile_shape[2]] += tile[k]
         return vol
 
+# TODO: Should FlorinTile and FlorinVolume inherit from the same object?
 class FlorinTile:
     def __init__ (self, data, address):
         self.address = address
         self.data = data
         self.tile_shape = data['image'].shape
 
-    # TODO: Move exceptions to FlorinVolume as well? Code reuse?
+    # TODO: Move exceptions to FlorinVolume as well? Code reuse? This might be a reason to make FlorinTile and FlorinVolume inherit from the same class
     def __getitem__ (self, key):
         if key not in self.data.keys():
             if key == 'threshold':
