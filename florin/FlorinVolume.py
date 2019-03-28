@@ -4,7 +4,6 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 
 from utils import threshold_bradley_nd, load_volume, save_imgs
-from utils2 import segment
 
 from florin.io import *
 from florin.tiling import tile_3d
@@ -17,16 +16,16 @@ class FlorinVolume:
         self.data = {}
         if path is None:
             self.volume_shape = shape
-            self.data['image'] = None if shape == None else np.zeros(shape)
+            self['image'] = None if shape == None else np.zeros(shape)
         else:
             self.load(path)
 
     def load (self, path):
-        self.data['image'] = load(path)
-        self.volume_shape = self.data['image'].shape
+        self['image'] = load(path)
+        self.volume_shape = self['image'].shape
 
     def tile (self, tile_shape, step):
-        return florin.FlorinTile.FlorinTiledVolume(tile_3d(self.data['image'], tile_shape, step), self.volume_shape, tile_shape, step)
+        return florin.FlorinTile.FlorinTiledVolume(tile_3d(self['image'], tile_shape, step), self.volume_shape, tile_shape, step)
 
     def save (self, path):
         pass
