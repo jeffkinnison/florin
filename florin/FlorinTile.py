@@ -4,11 +4,9 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 
 from utils import threshold_bradley_nd, load_volume, save_imgs
-from utils2 import segment
 
 from florin.io import *
 from florin.tiling import tile_3d
-from florin.thresholding.lat import local_adaptive_thresholding
 
 import florin.FlorinVolume
 

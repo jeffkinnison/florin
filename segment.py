@@ -12,8 +12,7 @@ from utils import threshold_bradley_nd, load_volume, save_imgs, segment, segment
 
 from florin.io import *
 from florin.tiling import tile_3d
-from florin.thresholding.lat import local_adaptive_thresholding
-from florin.thresholding.lat import threshold
+from florin.thresholding import *
 
 import florin.FlorinVolume
 import florin.FlorinTile
