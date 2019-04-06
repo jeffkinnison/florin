@@ -11,9 +11,9 @@ class InvalidThresholdError(ValueError):
         super(InvalidThresholdError, self).__init__(msg)
 
 def threshold (threshold):
-    from florin.FlorinTile import FlorinTile
+    from florin.FlorinVolume import FlorinVolume
     def threshold_closure(tile):
-        tile['threshold'] = local_adaptive_thresholding(tile['image'], tile.tile_shape, threshold)
+        tile['threshold'] = local_adaptive_thresholding(tile['image'], tile['image'].shape, threshold)
         return tile
     return threshold_closure
 

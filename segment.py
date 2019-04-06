@@ -11,7 +11,7 @@ from utils import threshold_bradley_nd, load_volume, save_imgs, segment, segment
 #from utils2 import segment, segment_tile
 
 from florin.io import *
-from florin.tiling import tile_3d
+from florin.tiling import tile_3d, tile
 from florin.thresholding import *
 
 import florin.FlorinVolume
@@ -60,7 +60,8 @@ def main():
     args = parse_args()
 
     print("Loading image volume")
-    vol = florin.FlorinVolume.FlorinVolume(path = args.input)
+    vol = florin.FlorinVolume.FlorinVolume()
+    vol.load(args.input)
 
     if args.show:
         plt.imshow(vol.data['image'][0], cmap='Greys_r')
@@ -68,7 +69,7 @@ def main():
 
     # Preprocess shape and step arguments
     print("Prepping threshold subvolume shape")
-    if len(args.shape) < len(vol.volume_shape):
+    if len(args.shape) < len(vol['image'].shape):
         shape = list(vol.volume_shape[:len(vol.volume_shape) - len(args.shape)])
         shape.extend(args.shape)
     else:
@@ -82,10 +83,12 @@ def main():
 
     print("Thresholding subvolumes")
 
-    tiles = vol.tile(shape, step)
-    tiles.add(threshold(args.threshold))
-    tiles.add(segment_tile(height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6)))
-    untiled = tiles.join()
+    vol.add(tile(shape, step))
+    vol.add(threshold(args.threshold))
+    vol.add(segment_tile(height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6)))
+
+    print("Joining tiles")
+    untiled = vol.join()
 
     if args.show:
         plt.imshow(untiled.data['threshold'][0], cmap='Greys_r')
