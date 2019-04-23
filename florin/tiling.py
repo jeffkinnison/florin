@@ -56,6 +56,7 @@ def tile(shape, step):
     return tile_closure
 
 def tile_3d(img, shape, step):
+    from florin.FlorinVolume import FlorinVolume
     for i in range(0, img.shape[0], step[0]):
         endi = i + shape[0]
         if endi > img.shape[0]:

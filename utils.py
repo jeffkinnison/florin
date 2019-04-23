@@ -277,7 +277,10 @@ if __name__ == "__main__":
 
 def segment_tile(height_bounds, width_bounds, depth_bounds, ratio_bounds):
     def segment_closure(tile):
-        (tile['cells'], tile['vas']) = segment(tile['image'], tile['threshold'], height_bounds, width_bounds, depth_bounds, ratio_bounds)
+        def seg(t):
+            (t['cells'], t['vas']) = segment(t['image'], t['threshold'], height_bounds, width_bounds, depth_bounds, ratio_bounds)
+            return t
+        tile.tile_gen = (seg(i) for i in tile.tile_gen)
         return tile
     return segment_closure
 

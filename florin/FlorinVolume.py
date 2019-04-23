@@ -40,8 +40,8 @@ class FlorinVolume:
         pass
 
     def add (self, func):
-        self.tile_gen = (func(tile) for tile in self.tile_gen)
-        return self
+        #self.tile_gen = (func(tile) for tile in self.tile_gen)
+        return func(self)
 
     def join (self):
         vol = florin.FlorinVolume.FlorinVolume(shape = self.shape)
