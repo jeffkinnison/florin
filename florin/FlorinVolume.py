@@ -8,24 +8,33 @@ from utils import threshold_bradley_nd, load_volume, save_imgs
 from florin.io import *
 from florin.tiling import tile_3d
 
-import florin.FlorinTile
+import florin
 
 class FlorinVolume:
-    def __init__ (self, data = None, shape = None):
+    def __init__ (self, data = None, shape = None, address = (0,0,0)):
 
         if data is not None:
             self.data = data
+            if 'image' in self.keys():
+                self.shape = self['image'].shape
+            elif 'threshold' in self.keys():
+                self.shape = self['image'].shape
+            else: self.shape = None
         else:
             if shape is not None:
                 self.data = {'image': np.zeros(shape)}
+                self.shape = shape
             else:
                 self.data = dict()
+                self.shape = None
 
         self.tile_gen = (i for i in [self])
+        self.address = address
         
 
     def load (self, path):
         self['image'] = load(path)
+        self.shape = self['image'].shape
 
     def save (self, path):
         pass
@@ -35,13 +44,13 @@ class FlorinVolume:
         return self
 
     def join (self):
-        vol = florin.FlorinVolume.FlorinVolume(shape = self['image'].shape)
+        vol = florin.FlorinVolume.FlorinVolume(shape = self.shape)
         for tile in self.tile_gen:
             for k in tile.keys():
-                if k not in vol.keys(): vol[k] = np.zeros(self.volume_shape)
-                vol[k][tile.address[0]:tile.address[0]+tile.tile_shape[0],\
-                       tile.address[1]:tile.address[1]+tile.tile_shape[1],\
-                       tile.address[2]:tile.address[2]+tile.tile_shape[2]] += tile[k]
+                if k not in vol.keys(): vol[k] = np.zeros(self.shape)
+                vol[k][tile.address[0]:tile.address[0]+tile.shape[0],\
+                       tile.address[1]:tile.address[1]+tile.shape[1],\
+                       tile.address[2]:tile.address[2]+tile.shape[2]] += tile[k]
         return vol
 
     def __getitem__ (self, key):

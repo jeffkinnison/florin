@@ -8,14 +8,12 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 
 from utils import threshold_bradley_nd, load_volume, save_imgs, segment, segment_tile
-#from utils2 import segment, segment_tile
 
 from florin.io import *
 from florin.tiling import tile_3d, tile
 from florin.thresholding import *
 
 import florin.FlorinVolume
-import florin.FlorinTile
 
 
 def parse_args(args=None):

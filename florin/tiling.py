@@ -68,7 +68,7 @@ def tile_3d(img, shape, step):
                 endk = k + shape[2]
                 if endk > img.shape[2]:
                     endk = img.shape[2]
-                yield FlorinVolume({'image':np.copy(img[i:endi, j:endj, k:endk])}, (i, j, k))
+                yield FlorinVolume({'image':np.copy(img[i:endi, j:endj, k:endk])}, address = (i, j, k))
 
 
 def tile_2d(img, shape, step, tile_store=None):
