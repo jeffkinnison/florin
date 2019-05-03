@@ -26,7 +26,7 @@ def florinate(func):
 
     Notes
     -----
-    ``florinate`` records arguments passed to an initial 
+    ``florinate`` records arguments passed to an initial
 
     Examples
     --------
@@ -49,6 +49,7 @@ def florinate(func):
     >>> worlder('Hello')
     'Hello World'
     """
+    @functools.wraps(func)
     def wrapper(*wrapper_args, **wrapper_kwargs):
         """Function wrapper that saves args and keyword arguments."""
         @functools.wraps(func)
