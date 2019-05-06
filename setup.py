@@ -7,9 +7,7 @@ setup(
     url='https://github.com/jeffkinnison/florin',
     author='Jeff Kinnison, Elia Shahbazi',
     author_email='jkinniso@nd.edu, ashahbaz@nd.edu',
-    packages=['florin',
-              'florin.actions',
-              'florin.thresholding'],
+    packages=['florin',],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
