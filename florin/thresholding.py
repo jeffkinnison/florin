@@ -1,3 +1,20 @@
+"""N-Dimensional Neighborhood Thresholding for any-dimensional data.
+
+Functions
+---------
+ndnt
+    Binarize data with N-Dimensional Neighborhood Thresholding.
+integral_image
+    Compute the integral image of a n image or volume.
+integral_image_sum
+    Compute the neighborhood sum of an integral image.
+
+Classes
+-------
+InvalidThresholdError
+
+"""
+
 import functools
 import itertools
 
@@ -5,22 +22,14 @@ import numpy as np
 
 
 class InvalidThresholdError(ValueError):
+    """Raised when the NDNT threshold value is out of domain."""
     def __init__(self, t):
         msg = 'Valid threshold values are in range [0, 1] or (1, 100]. '
         msg += 'Supplied threshold was {}'.format(t)
         super(InvalidThresholdError, self).__init__(msg)
 
-def threshold (threshold):
-    from florin.FlorinVolume import FlorinVolume
-    def threshold_closure(tile):
-        def thresh(t):
-            t['threshold'] = local_adaptive_thresholding(t['image'], t['image'].shape, threshold)
-            return t
-        tile.tile_gen = (thresh(i) for i in tile.tile_gen)
-        return tile
-    return threshold_closure
 
-def local_adaptive_thresholding(img, shape=None, threshold=0.25):
+def ndnt(img, shape=None, threshold=0.25, inplace=False):
     """Compute an n-dimensional Bradley thresholding of an image or volume.
 
     The Bradley thresholding, also called Local Adaptive Thresholding, uses the
@@ -85,6 +94,7 @@ def local_adaptive_thresholding(img, shape=None, threshold=0.25):
     # Return the binarized image in the correct shape
     return np.abs(1 - np.reshape(out, img.shape)).astype(np.uint8)
 
+
 def integral_image(img, inplace=False):
     """Compute the integral image of an image or image volume.
 
@@ -127,7 +137,6 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
     grids = np.meshgrid(*[np.arange(i) for i in int_img.shape],
                         indexing='ij', sparse=True)
     grids = np.asarray(grids)
-    #grids = grids.reshape([grids.shape[0], np.product(grids.shape[1:])])
 
     # Prepare the shape of the 'bounding box' s
     if not isinstance(shape, np.ndarray):
@@ -136,12 +145,9 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
 
     # Set up vectorized bounds checking
     img_shape = np.asarray(int_img.shape)
-    # img_shape = np.array([np.full(grids[i], img_shape[i])
-    #                       for i in range(len(img_shape))])
 
     # Set the lower and upper bounds for the rectangle around each pixel
     lo = (grids.copy() - shape.T)[0]
-    # lo[lo < 0] = 0
 
     hi = (grids + shape.T)[0]
 
