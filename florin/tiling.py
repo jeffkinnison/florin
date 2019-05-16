@@ -3,9 +3,14 @@
 Functions
 ---------
 tile
+    Subdivide an array into equally-sized tiles.
 """
+
 import h5py
 import numpy as np
+
+from florin.closure import florinate
+
 
 class DimensionMismatchError(ValueError):
     pass
@@ -22,9 +27,34 @@ class ShapeStepMismatchError(ValueError):
     pass
 
 
-def tile_nd(img, shape=None, step=None, tile_store=None):
+def tile_generator(img, shape=None, step=None, tile_store=None):
+    """Tile data into n-dimensional subdivisions.
+
+    Parameters
+    ----------
+    img : array_like
+        The data to subdivide.
+    shape : tuple of int
+        The shape of the subdivisions.
+    step : tuple of int
+        The step between subdivisions.
+
+    Yields
+    ------
+    tile : florin.FlorinVolume
+        A subdivision of ``img``. Subdivisions are yielded in sequence from the
+        start of ``img``.
     """
-    """
+    if shape is None:
+        shape = img.shape
+    elif len(shape) < img.ndim:
+        shape = img.shape[:len(shape) + 1] + shape
+
+    if step is None:
+        step = tuple([i for i in shape])
+    elif len(step) < img.ndim:
+        step = img.shape[:len(shape) + 1] + step
+
     if len(shape) != len(step) or len(shape) > img.ndim or len(step) > img.ndim:
         raise DimensionMismatchError()
 
@@ -37,48 +67,20 @@ def tile_nd(img, shape=None, step=None, tile_store=None):
     if not all(list(map(lambda x, y: x >= y, shape, step))):
         raise ShapeStepMismatchError()
 
-    if len(shape) < img.ndim:
-        shape = img.shape[:len(shape) + 1] + shape
+    shape = np.asarray(shape)
+    step = np.asarray(step)
 
-    if len(shape) < img.ndim:
-        shape = img.shape[:len(step) + 1] + step
+    # Get the number of volumes
+    img_shape = np.asarray(img.shape)
+    blocked_shape = (img_shape / step).astype(np.int32)
+    n_blocks = int(np.prod(blocked_shape))
 
-    if len(shape) == 2:
-        return tile_2d(img, shape, step, tile_store=tile_store)
-    else:
-        return tile_3d(img, shape, step, tile_store=tile_store)
-
-def tile(shape, step):
-    from florin.FlorinVolume import FlorinVolume
-    def tile_closure(volume):
-        volume.tile_gen = (i for i in tile_3d(volume['image'], shape, step))
-        return volume
-    return tile_closure
-
-def tile_3d(img, shape, step):
-    from florin.FlorinVolume import FlorinVolume
-    for i in range(0, img.shape[0], step[0]):
-        endi = i + shape[0]
-        if endi > img.shape[0]:
-            endi = img.shape[0]
-        for j in range(0, img.shape[1], step[1]):
-            endj = j + shape[1]
-            if endj > img.shape[1]:
-                endj = img.shape[1]
-            for k in range(0, img.shape[2], step[2]):
-                endk = k + shape[2]
-                if endk > img.shape[2]:
-                    endk = img.shape[2]
-                yield FlorinVolume({'image':np.copy(img[i:endi, j:endj, k:endk])}, address = (i, j, k))
+    # Iterate over the blocks and return them on request
+    for i in range(n_blocks):
+        idx = np.asarray(np.unravel_index(i, blocked_shape))
+        start = idx * step
+        slices = [slice(start[j], start[j] + shape[j]) for j in range(img.ndim)]
+        yield FlorinVolume({'image': np.copy(img[tuple(slices)])}, address=tuple(start))
 
 
-def tile_2d(img, shape, step, tile_store=None):
-    for i in range(0, img.shape[0], step[0]):
-        endi = i + shape[0]
-        if endi > img.shape[0]:
-            endi = img.shape[0]
-        for j in range(0, img.shape[1], step[1]):
-            endj = j + shape[1]
-            if endj > img.shape[1]:
-                endj = img.shape[1]
-            yield np.copy(img[i:endi, j:endj])
+tile = florinate(tile_generator)
