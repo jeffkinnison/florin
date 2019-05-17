@@ -10,6 +10,7 @@ import h5py
 import numpy as np
 
 from florin.closure import florinate
+from florin.FlorinVolume import FlorinArray
 
 
 class DimensionMismatchError(ValueError):
@@ -80,7 +81,7 @@ def tile_generator(img, shape=None, step=None, tile_store=None):
         idx = np.asarray(np.unravel_index(i, blocked_shape))
         start = idx * step
         slices = [slice(start[j], start[j] + shape[j]) for j in range(img.ndim)]
-        yield FlorinVolume({'image': np.copy(img[tuple(slices)])}, address=tuple(start))
+        yield FlorinArray(img[tuple(slices)], operations=img.child_operations, origin=tuple(start))
 
 
 tile = florinate(tile_generator)
