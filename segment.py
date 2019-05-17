@@ -9,9 +9,9 @@ from skimage.morphology import remove_small_objects
 
 from utils import threshold_bradley_nd, load_volume, save_imgs, segment, segment_tile
 
-from florin.io import *
-from florin.tiling import tile_3d, tile
-from florin.thresholding import *
+from florin.io import load, save
+from florin.tiling import tile
+from florin.thresholding import ndnt
 
 import florin.FlorinVolume
 
@@ -57,17 +57,15 @@ def parse_args(args=None):
 def main():
     args = parse_args()
 
-    print("Loading image volume")
-    vol = florin.FlorinVolume.FlorinVolume()
-    vol.load(args.input)
+    vol = florin.FlorinVolume.FlorinArray(load(args.input))
 
     if args.show:
-        plt.imshow(vol.data['image'][0], cmap='Greys_r')
+        plt.imshow(vol[0], cmap='Greys_r')
         plt.show()
 
     # Preprocess shape and step arguments
     print("Prepping threshold subvolume shape")
-    if len(args.shape) < len(vol['image'].shape):
+    if len(args.shape) < len(vol.shape):
         shape = list(vol.volume_shape[:len(vol.volume_shape) - len(args.shape)])
         shape.extend(args.shape)
     else:
@@ -81,24 +79,26 @@ def main():
 
     print("Thresholding subvolumes")
 
-    vol.add(tile(shape, step))
-    vol.add(threshold(args.threshold))
-    vol.add(segment_tile(height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6)))
+    vol.add(tile(shape=shape, step=step))
+    vol.add(ndnt(shape=shape, threshold=args.threshold))
+    # vol.add(segment_tile(height_bounds=(0, 20), width_bounds=(0,20), depth_bounds=(0,25), ratio_bounds=(0,0.6)))
 
     print("Joining tiles")
-    untiled = vol.join()
+    # untiled = vol.map()
+    vol.map()
+    print(vol.result)
 
     if args.show:
-        plt.imshow(untiled.data['threshold'][0], cmap='Greys_r')
+        plt.imshow(vol.result[0], cmap='Greys_r')
         plt.show()
 
     # Segmentation
-    cells, vas = (untiled.data['cells'], untiled.data['vas'])
+    cells, vas = (vol.result, vol.result)
 
     if args.show:
         f, ax = plt.subplots(1, 2)
-        ax[0].imshow(untiled.data['cells'][0], cmap='Greys_r')
-        ax[1].imshow(untiled.data['vas'][0], cmap='Greys_r')
+        ax[0].imshow(vol.result[0], cmap='Greys_r')
+        ax[1].imshow(vol.result[0], cmap='Greys_r')
         plt.show()
 
     print("Saving segmentation")
