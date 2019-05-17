@@ -134,14 +134,14 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
         shape = int_img.shape
 
     # Create meshgrids to perform vectorized calculations with index offsets
-    grids = np.meshgrid(*[np.arange(i) for i in int_img.shape],
-                        indexing='ij', sparse=True)
+    grids = np.meshgrid(*[np.arange(i, dtype=np.int32) for i in int_img.shape],
+                        indexing='ij', sparse=True, copy=False)
     grids = np.asarray(grids)
 
     # Prepare the shape of the 'bounding box' s
     if not isinstance(shape, np.ndarray):
         shape = np.asarray(shape)
-    shape = np.round(shape / 2).astype(np.uint32).reshape((shape.size, 1))
+    shape = np.round(shape / 2).astype(np.int32).reshape((shape.size, 1))
 
     # Set up vectorized bounds checking
     img_shape = np.asarray(int_img.shape)
