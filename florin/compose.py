@@ -29,6 +29,6 @@ def compose(*functions):
         """Compose two functions."""
         def execute(x):
             """Compose two functions on the supplied data."""
-            return f(g(x))
+            return g(f(x))
         return execute
     return functools.partial(functools.reduce, compose_two, functions)()
