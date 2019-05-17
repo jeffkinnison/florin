@@ -1,16 +1,16 @@
+"""
+"""
+
+import re
+
 import numpy as np
-from scipy.ndimage import binary_dilation, binary_erosion, binary_fill_holes, generate_binary_structure, binary_opening, binary_closing
-from skimage.measure import label, regionprops
-from skimage.morphology import remove_small_objects
 
-from utils import threshold_bradley_nd, load_volume, save_imgs
-
+from florin.closure import florinate
 from florin.compose import compose
 from florin.io import load, save
-from florin.tiling import tile
 
 
-class FlorinVolume(object):
+class FlorinArray(np.ndarray):
     """Container for data loaded into FLoRIN.
 
     Parameters
@@ -33,38 +33,58 @@ class FlorinVolume(object):
         The operations to run on this data.
 
     """
+    def __new__ (cls, data, operations=None, origin=(0,0,0), tiler=None):
+        obj = np.asarray(data).view(cls)
+        obj.origin = origin
+        obj.operations = []
+        obj.tiled = False
+        obj.tiler = tiler
+        obj.child_operations = []
+        obj.result = None
+        if operations is not None:
+            for operation in operations:
+                obj.add(operation)
+        return obj
 
-    def __init__ (self, data, operations=None, address=(0,0,0), tiler=None):
-        self.data = data
-        self.tiler = tiler if tiler is not None else tile(self.data)
-        self.address = address
-        self.function_chain = []
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
 
+        self.origin = getattr(obj, 'origin', (0, 0, 0))
+        self.operations = getattr(obj, 'operations', [])
+        self.tiler = getattr(obj, 'tiler', None)
+        self.tiled = getattr(obj, 'tiled', None)
+        self.child_operations = getattr(obj, 'child_operations', [])
+        self.result = getattr(obj, 'result', None)
+
+    def add(self, func):
+        if self.tiled:
+            self.child_operations.append(func)
+        else:
+            self.operations.append(func)
+
+        if re.search(r'tile_generator', func.__name__) and self.tiler is None:
+            self.tiled = True
 
     def load(self, path):
         self['image'] = load(path)
         self.shape = self['image'].shape
 
+    def map(self):
+        if self.tiled and (len(self.operations) == 0 or self.operations[-1] is not join):
+            self.operations.append(join(self.shape, self.dtype))
+
+        self.result = next(map(compose(*self.operations), [self]))
+        return self.result
+
     def save (self, path):
         pass
 
-    def add(self, func):
-        self.function_chain.append(func)
 
-    def map(self):
-        self.result = next(map(compose(*self.function_chain), [self.data]))
-
-
-    def __getitem__(self, key):
-        if key not in self.data:
-            if key == 'threshold':
-                raise KeyError("'threshold' not in tile. Have you thresholded your data?")
-            if key == 'image':
-                raise KeyError("'image' not in tile. The tile is empty.")
-        return self.data[key]
-
-    def __setitem__(self, key, value):
-        self.data[key] = value
-
-    def keys(self):
-        return self.data.keys()
+@florinate
+def join(kids, shape, dtype=np.uint8):
+    joined = FlorinArray(np.zeros(shape, dtype=dtype))
+    for k in kids:
+        slices = [slice(k.origin[i], k.origin[i] + k.shape[i]) for i in range(k.ndim)]
+        joined[slices] = k.map()
+    return joined
