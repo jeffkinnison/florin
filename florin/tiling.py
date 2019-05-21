@@ -57,6 +57,7 @@ def tile_generator(img, shape=None, step=None, tile_store=None):
         step = img.shape[:len(shape) + 1] + step
 
     if len(shape) != len(step) or len(shape) > img.ndim or len(step) > img.ndim:
+        print(shape, step, img.ndim)
         raise DimensionMismatchError()
 
     if not all(list(map(lambda x: x > 0, shape))):
@@ -81,7 +82,35 @@ def tile_generator(img, shape=None, step=None, tile_store=None):
         idx = np.asarray(np.unravel_index(i, blocked_shape))
         start = idx * step
         slices = [slice(start[j], start[j] + shape[j]) for j in range(img.ndim)]
-        yield FlorinArray(img[tuple(slices)], operations=img.child_operations, origin=tuple(start))
+        yield FlorinArray(img[tuple(slices)], original_shape=img.shape, origin=tuple(start))
+
+
+def join_tiles(tiles):
+    """Join a set of tiles into a single array.
+
+    Parameters
+    ----------
+    tiles : collection of FlorinArray
+        The collection of tiles to join.
+    shape : tuple of int
+        The shape of the joined array.
+
+    Returns
+    -------
+    joined : array_like
+        The array created by joining the tiles and inserting them into the
+        correct positions.
+    """
+    out = None
+    for tile in tiles:
+        if out is None:
+            out = FlorinArray(np.zeros(tile.original_shape, dtype=tile.dtype))
+        slices = [slice(tile.origin[i], tile.origin[i] + tile.shape[i])
+                  for i in range(tile.ndim)]
+        out[tuple(slices)] += tile
+
+    return out
 
 
 tile = florinate(tile_generator)
+join = florinate(join_tiles)
