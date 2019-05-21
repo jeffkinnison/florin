@@ -20,7 +20,7 @@ import itertools
 
 import numpy as np
 
-from florin.FlorinVolume import FlorinArray
+from florin.backend.numpy import FlorinArray
 
 
 class InvalidThresholdError(ValueError):
