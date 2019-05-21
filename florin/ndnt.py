@@ -20,6 +20,8 @@ import itertools
 
 import numpy as np
 
+from florin.FlorinVolume import FlorinArray
+
 
 class InvalidThresholdError(ValueError):
     """Raised when the NDNT threshold value is out of domain."""
@@ -88,7 +90,8 @@ def ndnt(img, shape=None, threshold=0.25, inplace=False):
     sums, counts = integral_image_sum(integral_image(img), shape=shape)
 
     # Compute the thresholding and binarize the image
-    out = np.ones(np.prod(img.shape), dtype=np.bool)
+    out = np.ones(np.prod(img.shape), dtype=np.bool).view(FlorinArray)
+    out.__dict__ = img.__dict__
     out[img.ravel() * counts.ravel() <= sums.ravel() * threshold] = False
 
     # Return the binarized image in the correct shape
