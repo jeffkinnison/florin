@@ -10,7 +10,7 @@ import h5py
 import numpy as np
 
 from florin.closure import florinate
-from florin.FlorinVolume import FlorinArray
+from florin.backend.numpy import FlorinArray
 
 
 class DimensionMismatchError(ValueError):
