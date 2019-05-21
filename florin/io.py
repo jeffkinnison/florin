@@ -187,6 +187,11 @@ def load_tiff(path):
 
 
 def save(img, path, **kwargs):
+    if isinstance(img, map):
+        img = next(img)
+    if isinstance(img, list) and len(img) == 1:
+        img = img[0]
+
     _, ext = os.path.splitext(path)
     ext = ext.strip('.').lower()
 
