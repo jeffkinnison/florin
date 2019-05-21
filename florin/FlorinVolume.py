@@ -33,9 +33,10 @@ class FlorinArray(np.ndarray):
         The operations to run on this data.
 
     """
-    def __new__ (cls, data, operations=None, origin=(0,0,0), tiler=None):
+    def __new__ (cls, data, operations=None, origin=(0,0,0), original_shape=None, tiler=None):
         obj = np.asarray(data).view(cls)
         obj.origin = origin
+        obj.original_shape = original_shape if original_shape is not None else obj.shape
         obj.operations = []
         obj.tiled = False
         obj.tiler = tiler
@@ -51,11 +52,45 @@ class FlorinArray(np.ndarray):
             return
 
         self.origin = getattr(obj, 'origin', (0, 0, 0))
+        self.original_shape = getattr(obj, 'original_shape', (0, 0, 0))
         self.operations = getattr(obj, 'operations', [])
         self.tiler = getattr(obj, 'tiler', None)
         self.tiled = getattr(obj, 'tiled', None)
         self.child_operations = getattr(obj, 'child_operations', [])
         self.result = getattr(obj, 'result', None)
+
+    def __reduce__(self):
+        state = super(FlorinArray, self).__reduce__()
+        new_state = state[2] + (self.origin, self.original_shape)
+        return (state[0], state[1], new_state)
+
+    def __setstate__(self, state):
+        self.origin = state[-2]
+        self.original_shape = state[-1]
+        super(FlorinArray, self).__setstate__(state[:-2])
+
+    
+
+    # def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+    #     f = {
+    #         "reduce": ufunc.reduce,
+    #         "accumulate": ufunc.accumulate,
+    #         "reduceat": ufunc.reduceat,
+    #         "outer": ufunc.outer,
+    #         "at": ufunc.at,
+    #         "__call__": ufunc,
+    #     }
+    #
+    #     inputs = list(inputs)
+    #     for i, inpt in enumerate(inputs):
+    #         if isinstance(inpt, np.ndarray):
+    #             inputs[i] = inpt.view(np.ndarray)
+    #
+    #     output = FlorinArray(f[method](*inputs, **kwargs), origin=self.origin)
+    #     # output.view(FlorinArray)
+    #     output.origin = self.origin
+    #     output.original_shape = self.original_shape
+    #     return output
 
     def add(self, func):
         if self.tiled:
