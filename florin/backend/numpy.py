@@ -34,6 +34,7 @@ class FlorinArray(np.ndarray):
                      else tuple([0 for _ in range(obj.ndim)])
         obj.original_shape = original_shape if original_shape is not None \
                              else obj.shape
+        return obj
 
     def __array_finalize__(self, obj):
         if obj is None:
