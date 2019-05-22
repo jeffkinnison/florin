@@ -90,12 +90,12 @@ def ndnt(img, shape=None, threshold=0.25, inplace=False):
     sums, counts = integral_image_sum(integral_image(img), shape=shape)
 
     # Compute the thresholding and binarize the image
-    out = np.ones(np.prod(img.shape), dtype=np.bool).view(FlorinArray)
-    out.__dict__ = img.__dict__
-    out[img.ravel() * counts.ravel() <= sums.ravel() * threshold] = False
+    out = np.ones(np.prod(img.shape), dtype=np.uint8)
+    # out.__dict__ = img.__dict__
+    out[img.ravel() * counts.ravel() <= sums.ravel() * threshold] = 0
 
     # Return the binarized image in the correct shape
-    return np.abs(1 - np.reshape(out, img.shape)).astype(np.uint8)
+    return np.abs(1 - np.reshape(out.astype(np.uint8), img.shape)).astype(np.uint8)
 
 
 def integral_image(img, inplace=False):
