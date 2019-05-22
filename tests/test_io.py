@@ -45,31 +45,31 @@ def test_load(load_setup):
     """Test that the load function works over all test filetypes."""
     data, tmpdir = load_setup
 
-    loaded = load(os.path.join(tmpdir, 'data.npy'))
+    loaded = load()(os.path.join(tmpdir, 'data.npy'))
     assert np.all(loaded == data)
 
-    loaded = load(os.path.join(tmpdir, 'data.h5'))
+    loaded = load()(os.path.join(tmpdir, 'data.h5'))
     assert np.all(loaded == data)
 
-    loaded = load(os.path.join(tmpdir, 'data.h5'), key='foo')
+    loaded = load()(os.path.join(tmpdir, 'data.h5'), key='foo')
     assert np.all(loaded == data)
 
-    loaded = load(os.path.join(tmpdir, 'data.tif'))
+    loaded = load()(os.path.join(tmpdir, 'data.tif'))
     assert np.all(loaded == data)
 
-    loaded = load(os.path.join(tmpdir, 'data.tiff'))
+    loaded = load()(os.path.join(tmpdir, 'data.tiff'))
     assert np.all(loaded == data)
 
-    loaded = load(os.path.join(tmpdir, 'png'))
+    loaded = load()(os.path.join(tmpdir, 'png'))
     assert np.all(loaded == data)
 
     for i in range(data.shape[0]):
         fname = fname = str(i).zfill(3) + '.png'
-        loaded = load(os.path.join(tmpdir, 'png', fname))
+        loaded = load()(os.path.join(tmpdir, 'png', fname))
         assert np.all(loaded == data[i])
 
     with pytest.raises(FileNotFoundError):
-        loaded = load('/foo/bar.lksd')
+        loaded = load()('/foo/bar.lksd')
 
 
 def test_load_hdf5(load_setup):
@@ -120,13 +120,13 @@ def test_save(save_setup, tmpdir):
     tmpdir = str(tmpdir)
 
     fpath = os.path.join(tmpdir, 'data.h5')
-    save(data, fpath)
+    save()(data, fpath)
     assert os.path.isfile(fpath)
     with h5py.File(fpath, 'r') as saved:
         assert 'stack' in saved
         assert np.all(saved['stack'][:] == data)
 
-    save(data, fpath, key='foo')
+    save()(data, fpath, key='foo')
     assert os.path.isfile(fpath)
     with h5py.File(fpath, 'r') as saved:
         assert 'stack' in saved
@@ -134,25 +134,25 @@ def test_save(save_setup, tmpdir):
         assert np.all(saved['stack'][:] == data)
 
     fpath = os.path.join(tmpdir, 'data.npy')
-    save(data, fpath)
+    save()(data, fpath)
     assert os.path.isfile(fpath)
     saved = np.load(fpath)
     assert np.all(saved == data)
 
     fpath = os.path.join(tmpdir, 'data.tif')
-    save(data, fpath)
+    save()(data, fpath)
     assert os.path.isfile(fpath)
     saved = imread(fpath)
     assert np.all(saved == data)
 
     fpath = os.path.join(tmpdir, 'data.tiff')
-    save(data, fpath)
+    save()(data, fpath)
     assert os.path.isfile(fpath)
     saved = imread(fpath)
     assert np.all(saved == data)
 
     fpath = os.path.join(tmpdir, 'png')
-    save(data, fpath)
+    save()(data, fpath)
     assert os.path.isdir(fpath)
     imgs = sorted(glob.glob(os.path.join(fpath, '*.png')))
     for i, img in enumerate(imgs):
@@ -165,7 +165,7 @@ def test_save(save_setup, tmpdir):
     for i in range(data.shape[0]):
         fname = '{}.png'.format(str(i).zfill(3))
         fpath = os.path.join(tmpdir, fname)
-        save(data[i], fpath)
+        save()(data[i], fpath)
         assert os.path.isfile(fpath)
         saved = imread(fpath)
         assert np.all(saved == data[i])
