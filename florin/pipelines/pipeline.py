@@ -6,6 +6,7 @@ Pipeline
     Base pipeline.
 """
 
+import collections
 import functools
 import inspect
 try:
@@ -58,10 +59,16 @@ class Pipeline(object):
                     for j in range(start + 1, end):
                         self.operations.pop(j)
             if isinstance(operation, Pipeline):
-                self.operations.insert(i + 1, join())
+                try:
+                    if self.operations[i + 1].__name__ is not 'reconstruct':
+                        self.operations.insert(i + 1, join())
+                except IndexError:
+                    self.operations.append(join())
 
         self.operations = compose(*self.operations)
-        return self.run([data] if not inspect.isgenerator(data) else data)
+        if isinstance(data, str) or not inspect.isgenerator(data) and not isinstance(data, collections.Sequence):
+            data = [data]
+        return self.run(data)
 
     def __contains__(self, func):
         return func in self.operations \
