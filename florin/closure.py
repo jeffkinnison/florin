@@ -10,7 +10,7 @@ florinate
 import functools
 
 
-def florinate(func):
+def florinate(func, *args, **kwargs):
     """Decorator to wrap arbitrary functions and enable delayed evaluation.
 
     Parameters
@@ -55,8 +55,12 @@ def florinate(func):
         @functools.wraps(func)
         def delayed(*args, **kwargs):
             """Wrapper for deferred function calls with persistent arguments"""
-            innerargs = args + wrapper_args
             kwargs.update(wrapper_kwargs)
-            return func(*innerargs, **kwargs)
+            if isinstance(args[0], tuple):
+                innerargs = args[0][:-1] + wrapper_args
+                return func(*innerargs, **kwargs), args[0][-1]
+            else:
+                innerargs = args + wrapper_args
+                return func(*innerargs, **kwargs)
         return delayed
     return wrapper
