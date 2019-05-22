@@ -28,7 +28,7 @@ class ShapeStepMismatchError(ValueError):
     pass
 
 
-def tile_generator(img, shape=None, step=None, tile_store=None):
+def tile_generator(img, shape=None, stride=None, tile_store=None):
     """Tile data into n-dimensional subdivisions.
 
     Parameters
@@ -37,52 +37,56 @@ def tile_generator(img, shape=None, step=None, tile_store=None):
         The data to subdivide.
     shape : tuple of int
         The shape of the subdivisions.
-    step : tuple of int
-        The step between subdivisions.
+    stride : tuple of int
+        The stride between subdivisions.
 
     Yields
     ------
     tile : florin.FlorinVolume
         A subdivision of ``img``. Subdivisions are yielded in sequence from the
         start of ``img``.
+    metadata : dictionary
+        Key/value store of metadata, e.g. for joining tiles.
+
     """
     if shape is None:
         shape = img.shape
     elif len(shape) < img.ndim:
         shape = img.shape[:len(shape) + 1] + shape
 
-    if step is None:
-        step = tuple([i for i in shape])
-    elif len(step) < img.ndim:
-        step = img.shape[:len(shape) + 1] + step
+    if stride is None:
+        stride = tuple([i for i in shape])
+    elif len(stride) < img.ndim:
+        stride = img.shape[:len(shape) + 1] + stride
 
-    if len(shape) != len(step) or len(shape) > img.ndim or len(step) > img.ndim:
-        print(shape, step, img.ndim)
+    if len(shape) != len(stride) or len(shape) > img.ndim or len(stride) > img.ndim:
+        print(shape, stride, img.ndim)
         raise DimensionMismatchError()
 
     if not all(list(map(lambda x: x > 0, shape))):
         raise InvalidTileShapeError()
 
-    if not all(list(map(lambda x: x > 0, step))):
+    if not all(list(map(lambda x: x > 0, stride))):
         raise InvalidTileStepError()
 
-    if not all(list(map(lambda x, y: x >= y, shape, step))):
+    if not all(list(map(lambda x, y: x >= y, shape, stride))):
         raise ShapeStepMismatchError()
 
     shape = np.asarray(shape)
-    step = np.asarray(step)
+    stride = np.asarray(stride)
 
     # Get the number of volumes
     img_shape = np.asarray(img.shape)
-    blocked_shape = (img_shape / step).astype(np.int32)
+    blocked_shape = (img_shape / stride).astype(np.int32)
     n_blocks = int(np.prod(blocked_shape))
 
     # Iterate over the blocks and return them on request
     for i in range(n_blocks):
         idx = np.asarray(np.unravel_index(i, blocked_shape))
-        start = idx * step
+        start = idx * stride
         slices = [slice(start[j], start[j] + shape[j]) for j in range(img.ndim)]
-        yield FlorinArray(img[tuple(slices)], original_shape=img.shape, origin=tuple(start))
+        yield img[tuple(slices)], \
+              dict(original_shape=img.shape, origin=tuple(start))
 
 
 def join_tiles(tiles):
@@ -102,10 +106,10 @@ def join_tiles(tiles):
         correct positions.
     """
     out = None
-    for tile in tiles:
+    for tile, metadata in tiles:
         if out is None:
-            out = FlorinArray(np.zeros(tile.original_shape, dtype=tile.dtype))
-        slices = [slice(tile.origin[i], tile.origin[i] + tile.shape[i])
+            out = np.zeros(metadata['original_shape'], dtype=tile.dtype)
+        slices = [slice(metadata['origin'][i], metadata['origin'][i] + tile.shape[i])
                   for i in range(tile.ndim)]
         out[tuple(slices)] += tile
 
