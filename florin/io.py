@@ -8,6 +8,8 @@ import h5py
 import numpy as np
 from skimage.io import imread, imsave
 
+from florin.closure import florinate
+
 
 class InvalidImageFileError(Exception):
     '''Raised when attempting to load a file that is not an image.'''
@@ -54,7 +56,7 @@ class InvalidPermissionsError(Exception):
               .format(path)
         super(InvalidPermissionsError, self).__init__(msg)
 
-
+@florinate
 def load(path, **kwargs):
     """Load images from a file.
 
@@ -147,7 +149,6 @@ def load_images(path, ext='png'):
     img_names = sorted(glob.glob(os.path.join(path, '*' + ext)))
     imgs = None
     for i, img in enumerate(img_names):
-        print(img)
         img = imread(img)
         if imgs is None:
             imgs = np.zeros((len(img_names),) + img.shape, dtype=img.dtype)
@@ -185,8 +186,11 @@ def load_tiff(path):
     img = imread(path, plugin='tifffile')
     return img
 
-
+@florinate
 def save(img, path, **kwargs):
+    if img.dtype == np.bool:
+        img = img.astype(np.uint8) * 255
+
     if isinstance(img, map):
         img = next(img)
     if isinstance(img, list) and len(img) == 1:
@@ -205,6 +209,7 @@ def save(img, path, **kwargs):
         save_images(img, path)
     else:
         save_image(img, path)
+    return img
 
 
 def save_hdf5(img, path, key='stack'):
