@@ -8,6 +8,8 @@ compose
 
 import functools
 
+from florin.backend.numpy import FlorinArray
+
 
 def compose(*functions):
     """Compose a chain of functions on an initial input.
@@ -31,4 +33,4 @@ def compose(*functions):
             """Compose two functions on the supplied data."""
             return g(f(x))
         return execute
-    return functools.partial(functools.reduce, compose_two, functions)()
+    return functools.partial(functools.reduce(compose_two, functions))
