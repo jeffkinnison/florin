@@ -22,7 +22,9 @@ remove_small_holes
     Fill in contiguous holes smaller than the specified size.
 remove_small_objects
     Remove contiguous objects smaller than the specified size.
+
 """
+
 import skimage.morphology
 
 from florin.closure import florinate

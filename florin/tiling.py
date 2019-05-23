@@ -2,8 +2,10 @@
 
 Functions
 ---------
-tile
+tile_generator
     Subdivide an array into equally-sized tiles.
+join_tiles
+    Join a sequence of tiles into a single array.
 """
 
 import h5py
@@ -48,7 +50,13 @@ def tile_generator(img, shape=None, stride=None, tile_store=None):
     metadata : dictionary
         Key/value store of metadata, e.g. for joining tiles.
 
+    Notes
+    -----
+    Everything up to the for loop will be run exactly once when the first tile
+    is requested.
     """
+
+    # Normalize the shape and stride tuples to match the dimensionality of img.
     if shape is None:
         shape = img.shape
     elif len(shape) < img.ndim:
@@ -59,6 +67,7 @@ def tile_generator(img, shape=None, stride=None, tile_store=None):
     elif len(stride) < img.ndim:
         stride = img.shape[:len(shape) + 1] + stride
 
+    # Try to throw some useful errors if there are problems.
     if len(shape) != len(stride) or len(shape) > img.ndim or len(stride) > img.ndim:
         print(shape, stride, img.ndim)
         raise DimensionMismatchError()
