@@ -11,9 +11,10 @@ scale.
   been shown to outperform other thresholding methods at segmenting neural
   microsopy data.
 - Out of the box serial, parallel, and distributed processing.
-- Utilizes CPU (numpy) or GPU (pytorch) vectorized operations.
+- Utilizes CPU (numpy) vectorized operations and methods from scientific python
+  libraries.
 - Enables pipeline reuse. Create one image processing pipeline, serialize it,
-  and move it to any other machine running FLoRIN.
+  and move it to another machine running FLoRIN.
 
 # Target Audience
 
@@ -42,7 +43,8 @@ Full documentation of the FLoRIN pipeline may be found at https://readthedocs.io
 
 # Getting Started
 
-Running a simple segmentation pipeline is
+A simple segmentation pipeline for microCT X-Ray data that uses multiprocessing
+for subsets of operations looks like:
 
 ```python
 import florin
@@ -53,33 +55,47 @@ import florin.thresholding as thresholding
 
 pipeline = florin.Serial(
     # Load in the data to process
-    florin.load('my_data'),
+    florin.load('/path/to/my/volume'),
 
     # Subdivide the data into sub-arrays
     florin.tile(shape=(10, 64, 64), stride=(5, 32, 32)),
 
-    # Threshold with NDNT
-    thresholding.ndnt(shape=(10, 64, 64), threshold=0.11),
+    # Segment multiple tiles independently in parallel.
+    florin.Multiprocess(
+        # Threshold with NDNT
+        thresholding.ndnt(shape=(10, 64, 64), threshold=0.3),
 
-    # Clean up the binarized image
-    morphology.binary_fill_holes(min_size=50),
-    morphology.binary_opening(),
-
-    # Join the tiles together into a single array
-    tile.join(),
+        # Clean up the binarized image
+        morphology.binary_opening()
+    ),
 
     # Find connected components ad get their properties
     conncomp.label(),
+    morphology.binary_fill_holes(min_size=50),
     conncomp.regionprops(),
 
-    # Classify the connected components by binning them based on their properties
-    classify.classes(),
+    # Classify the connected components concurrently.
+    florin.Multithread(
+        # Bin connected components based on their properties
+        florin.classify(
+            # If 100 <= obj.area <= 500 and 25 <= obj.width <= 55 and
+            # 25 <= obj <= 55 and 5 <= obj.depth <= 10, consider the connected
+            # component a cell. Otherwise, consider it vasculature.
+            florin.bounds_classifier(
+                'cells',
+                area=(100, 500),
+                width=(25, 55),
+                height=(25, 55),
+                depth=(5, 10)),
+            florin.bounds_classifier('vasculature')
+        )
+    ),
 
     # Save the output with class labels
     florin.save('segmented.tiff')
 )
 
-pipeline()
+out = pipeline()
 ```
 
 # Maintainers
