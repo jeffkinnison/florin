@@ -25,7 +25,7 @@ def compose(*functions):
 
     Returns
     -------
-        The result of applying each function in sequence to the initial data.
+        A partial function to be applied to data at a later time.
     """
     def compose_two(f, g):
         """Compose two functions."""

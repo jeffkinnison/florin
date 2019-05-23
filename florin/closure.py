@@ -10,7 +10,7 @@ florinate
 import functools
 
 
-def florinate(func, *args, **kwargs):
+def florinate(func):
     """Decorator to wrap arbitrary functions and enable delayed evaluation.
 
     Parameters
@@ -26,7 +26,10 @@ def florinate(func, *args, **kwargs):
 
     Notes
     -----
-    ``florinate`` records arguments passed to an initial
+    ``florinate`` is essentially a rebranding of functools.partial to allow
+    passing the deferred arguments at the front of the call instead of the
+    tail. This conforms with the signatures of many computer vision API
+    functions, which tend to accept image data as the first argument.
 
     Examples
     --------

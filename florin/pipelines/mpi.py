@@ -24,6 +24,11 @@ class MPIPipeline(Pipeline):
     operations : callables
         Sequence of operations to run in the pipeline.
 
+    Notes
+    -----
+    MPI is configured by wrapping Python in an ``mpiexec`` or ``mpirun`` call
+    at runtime.
+
     """
 
     def run(self, data):

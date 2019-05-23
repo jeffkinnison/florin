@@ -27,11 +27,6 @@ class Pipeline(object):
     operations : callables
         The operations/functions/callable classes to run in this pipeline.
 
-    Attributes
-    ----------
-    operations : list of callables
-        The operations/functions/callable classes to run in this pipeline.
-
     """
 
     def __init__(self, *operations):
@@ -92,10 +87,16 @@ class Pipeline(object):
         return pkl.dumps(self)
 
     def run(self, data):
+        """Run data through the pipeline.
+
+        Parameters
+        ----------
+        data
+            Input to the first function in the pipeline.
+
+        Returns
+        -------
+        result
+            The result of applying the pipeline to ``data``.
+        """
         raise NotImplementedError
-
-
-def demap(data):
-    if isinstance(data, map):
-        data = next(data)
-    return data

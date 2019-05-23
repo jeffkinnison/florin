@@ -6,6 +6,8 @@ SerialPipeline
     Pipeline for single-core serial computation.
 """
 
+import inspect
+
 from florin.pipelines.pipeline import Pipeline
 
 
@@ -17,11 +19,9 @@ class SerialPipeline(Pipeline):
     operations : callables
         The operations/functions/callable classes to run in this pipeline.
 
-    Attributes
-    ----------
-    operations : list of callables
-        The operations/functions/callable classes to run in this pipeline.
     """
 
     def run(self, data):
-        return map(self.operations, data)
+        result = map(self.operations, data)
+        return result if inspect.isgenerator(data) or len(data) > 1 \
+               else next(result)

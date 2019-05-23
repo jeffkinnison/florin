@@ -131,29 +131,50 @@ def integral_image(img, inplace=False):
 
 
 def integral_image_sum(int_img, shape=None, return_counts=True):
-    """Return the average value of each pixel over a local area
+    """Compute pixel neighborhood statistics.
+
+    Parameters
+    ----------
+    int_image : array_like
+        The integral image.
+    shape : tuple of int
+        The shape of the neighborhood around each pixel.
+    return_counts : bool
+        If True, in addition to neighborhood pixel sums, return the number of
+        pixels used to compute each sum.
+
+    Returns
+    -------
+    sums : array_like
+        An array where each entry is the sum of pixel values in a neighborhood.
+        The same shape as ``int_img``.
+    counts : array_like
+        An array where each entry is the number of pixels used to compute each
+        entry in ``sums``. The same shape as ``int_img``.
     """
     if shape is None:
         shape = int_img.shape
 
-    # Create meshgrids to perform vectorized calculations with index offsets
+    # Create meshgrids to perform vectorized calculations with index offsets.
+    # Use sparse meshgrids to save space.
     grids = np.meshgrid(*[np.arange(i, dtype=np.int32) for i in int_img.shape],
                         indexing='ij', sparse=True, copy=False)
     grids = np.asarray(grids)
 
-    # Prepare the shape of the 'bounding box' s
+    # Prepare the shape of the neighborhood around each pixel.
     if not isinstance(shape, np.ndarray):
         shape = np.asarray(shape)
     shape = np.round(shape / 2).astype(np.int32).reshape((shape.size, 1))
 
-    # Set up vectorized bounds checking
+    # Set up vectorized bounds checking.
     img_shape = np.asarray(int_img.shape)
 
     # Set the lower and upper bounds for the rectangle around each pixel
     lo = (grids.copy() - shape.T)[0]
-
     hi = (grids + shape.T)[0]
 
+    # lo should not have bounds less than 0, and hi should not have bounds
+    # exceeding the shape of int_img along each dimension.
     for i in range(len(lo)):
         lo[i][lo[i] < 0] = 0
         x = hi[i] >= img_shape[i]
@@ -172,12 +193,14 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
     ref = sum(indices[0]) & 1
     parity = np.array([1 if (sum(i) & 1) == ref else -1 for i in indices])
 
-    # Set up the
+    # Compute the pixel neighborhood sums.
     sums = np.zeros(int_img.shape)
     for i in range(len(indices)):
         idx = tuple(bounds[j, indices[i][j]] for j in range(len(indices[i])))
         sums += parity[i] * int_img[idx]
 
+    # If pixel neighorhood sizes are requested, compute the area/volume of each
+    # neighborhood.
     if return_counts:
         counts = bounds[:, 1] - bounds[:, 0]
         counts[counts == 0] = 1

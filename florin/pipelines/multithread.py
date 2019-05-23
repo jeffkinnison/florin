@@ -1,9 +1,9 @@
-"""Parallel multi-core processing pipeline.
+"""Parallel multithreaded processing pipeline.
 
 Classes
 -------
 MultithreadingPipeline
-    Pipeline for multi-core parallel processing on a single machine.
+    Pipeline for multithreaded parallel processing on a single machine.
 """
 
 from multiprocessing.pool import ThreadPool
@@ -12,7 +12,15 @@ from florin.pipelines.pipeline import Pipeline
 
 
 class MultithreadingPipeline(Pipeline):
-    """
+    """Pipeline for multithreaded parallel processing on a single machine.
+
+    Parameters
+    ----------
+    operations : callables
+        Sequence of operations to run in the pipeline.
+    threads : int, optional
+        The number of threads to use. Setting None will attempt to use as
+        many as can be supported.
     """
 
     def __init__(self, *operations, threads=None):

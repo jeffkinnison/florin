@@ -15,6 +15,21 @@ from florin.closure import florinate
 
 @florinate
 def regionprops(image, **kwargs):
+    """Compute the properties of connected components.
+
+    Parameters
+    ----------
+    image : array_like
+        The labeled image to process for connected components.
+    intensity_image : array_like
+        The original image from which ``image`` was computed. Passing this
+        enables computing summary statistics about the image pixel intensities.
+
+    Notes
+    -----
+    This function wraps skimage.measure.regionprops to allow for additional
+    bookkeeping and feature computation.
+    """
     objs = skimage.measure.regionprops(image, **kwargs)
 
     for obj in objs:

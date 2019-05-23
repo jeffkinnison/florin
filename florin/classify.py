@@ -19,13 +19,25 @@ from florin.closure import florinate
 
 
 def classify(obj, *classes):
-    """Classify an object based on boundaries on its properties.
+    """Multiclass classificaiton based on human-tuned boundaries.
 
     Parameters
     ----------
     obj : skimage.measure._regionprops.RegionProperties
         The object to classify.
-    classes : dict of str/tuple
+    classes : florin.classify.FlorinClassifiers
+        The classes to select from.
+
+    Returns
+    -------
+    obj
+        Updates ``obj`` with a class label (``obj.class_label``) and passes it
+        on for further processing.
+
+    Notes
+    -----
+    In a typical FLoRIN pipeline, florin.reconstruct() will be called
+    immediately after florin.classify().
     """
     obj.class_label = 0
     for c in classes:
@@ -36,7 +48,18 @@ def classify(obj, *classes):
 
 
 class FlorinClassifier(object):
-    """
+    """Classify connected components based on boundary conditions.
+
+    Parameters
+    ----------
+    label
+        The class label identifying this class. Can be any arbitrary label.
+    boundaries
+        Pairs of values (2-tuples) passed as keyword arguments defining the
+        boundaries to classify along. For example, passing ``area=(5, 10)``
+        tells this class that the objects it contains have an area/volume of
+        5 <= obj.area <= 10.
+
     """
 
     def __init__(self, label, **kwargs):
@@ -50,6 +73,19 @@ class FlorinClassifier(object):
                 self.bounds[key] = val
 
     def classify(self, obj):
+        """Determine if an object is in this class.
+
+        Parameters
+        ----------
+        obj : skimage.measure._regionprops.RegionProperties
+            The object to classify.
+
+        Returns
+        -------
+        bool
+            True if the object is within all defined boundaries else False. If
+            no boundaries were provided, return True (e.g., the default class).
+        """
         if len(self.bounds) > 0:
             return all([v[0] <= obj[k] <= v[1] for k, v in self.bounds.items()])
         else:

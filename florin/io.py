@@ -1,6 +1,34 @@
-import errno
+"""I/O functions for loading and saving data in a variety of formats.
+
+Functions
+---------
+load
+    Load image(s) from a file.
+load_hdf5
+    Load data from an HDF5 file.
+load_image
+    Load an image file.
+load_images
+    Load a directory of image files.
+load_npy
+    Load data from a numpy array file.
+load_tiff
+    Load a TIFF stack.
+save
+    Save image(s) in a variety of formats.
+save_hdf5
+    Save an image to HDF5 format.
+save_image
+    Save an image.
+save_images
+    Save a sequence of images.
+save_npy
+    Save an image to a numpy array file.
+save_tiff
+    Save an image to TIFF format.
+"""
+
 import glob
-import logging
 import os
 import sys
 
@@ -10,51 +38,6 @@ from skimage.io import imread, imsave
 
 from florin.closure import florinate
 
-
-class InvalidImageFileError(Exception):
-    '''Raised when attempting to load a file that is not an image.'''
-    def __init__(self, path):
-        msg = 'File {} is not a valid image file. '.format(path)
-        msg += 'Check the supplied filepath to ensure it is correct.'
-        super(InvalidImageFileError, self).__init__(msg)
-
-
-class InvalidDataKeyError(Exception):
-    '''Raised when accessing a key in a data file that does not exist.'''
-    def __init__(self, key, path):
-        msg = '"{}" is not a valid key in {}. '.format(key, path)
-        msg += 'Check that the filepath and key are correct.'
-        super(InvalidDataKeyError, self).__init__(msg)
-
-
-class ImageDoesNotExistError(Exception):
-    '''Raised when attempting to load an image file that does not exist.'''
-    def __init__(self, path):
-        msg = 'Image {} does not exist on this filesystem. '.format(path)
-        msg += 'Check the supplied filepath to ensure that it is correct.'
-        super(ImageDoesNotExistError, self).__init__(msg)
-
-
-class InvalidImageDimensionError(Exception):
-    '''Raised when an image being written is not two dimensional'''
-    def __init__(self, img):
-        msg = 'Image is of invalid dimension {}.\n'.format(img.ndim)
-        super(InvalidImageDimensionError, self).__init__(msg)
-
-
-class InvalidImageDataTypeError(Exception):
-    '''Raised when an image is not of a viable data type.'''
-    def __init__(self, img):
-        msg = 'Image is of invalid data type {}.\n'.format(img.dtype)
-        super(InvalidImageDataTypeError, self).__init__(msg)
-
-
-class InvalidPermissionsError(Exception):
-    '''Raised when an image cannot be accessed due to invalid permissions'''
-    def __init__(self, path):
-        msg = 'Cannot access file at {} due to insufficient permissions.' \
-              .format(path)
-        super(InvalidPermissionsError, self).__init__(msg)
 
 @florinate
 def load(path, **kwargs):
@@ -103,8 +86,7 @@ def load_hdf5(path, key='stack'):
     path : str
         Path to the HDF5 file to load.
     key
-        Key to load data from when working with key/value stores (e.g. HDF5,
-        npz, etc.)
+        Key to load data from.
 
     Returns
     -------
@@ -116,7 +98,7 @@ def load_hdf5(path, key='stack'):
 
 
 def load_image(path):
-    """Load data from an image file.
+    """Load an image file.
 
     Parameters
     ----------
@@ -132,7 +114,7 @@ def load_image(path):
 
 
 def load_images(path, ext='png'):
-    """Load data from a directory of image files.
+    """Load a directory of image files.
 
     Parameters
     ----------
@@ -172,7 +154,7 @@ def load_npy(path):
 
 
 def load_tiff(path):
-    """Load data from a TIFF stack.
+    """Load a TIFF stack.
 
     Parameters
     ----------
@@ -186,8 +168,36 @@ def load_tiff(path):
     img = imread(path, plugin='tifffile')
     return img
 
+
 @florinate
 def save(img, path, **kwargs):
+    """Save image(s) in a variety of formats.
+
+    Parameters
+    ----------
+    img : array_like
+        The image/volume to save.
+    path : str
+        The filepath to save the data to. This path determines which format the
+        data will be saved as.
+
+    Returns
+    -------
+    img
+        The unaltered image/volume.
+
+    Additional Parameters
+    ---------------------
+    See ``save_hdf5``, ``save_image``, ``save_images``, ``save_npy``, and
+    ``save_tiff`` for filetype-specific arguments.
+
+    Notes
+    -----
+    The filetype passed as ``path`` will determine the format of the saved
+    file. If no extension is found, 3D arrays will automatically be saved as
+    numbered PNG files in a directory created at ``path`` and 2D arrays will be
+    saved to ``path`` directly as a PNG.
+    """
     if img.dtype == np.bool:
         img = img.astype(np.uint8) * 255
 
@@ -213,13 +223,32 @@ def save(img, path, **kwargs):
 
 
 def save_hdf5(img, path, key='stack'):
+    """Save an image to HDF5 format.
+
+    Parameters
+    ----------
+    img : array_like
+        The image/volume to save.
+    path : str
+        The filepath to save the data to.
+    """
     if os.path.isfile(path):
         f = h5py.File(path, 'r+')
     else:
         f = h5py.File(path, 'w')
     f.create_dataset(key, data=img)
 
+
 def save_image(img, path):
+    """Save an image.
+
+    Parameters
+    ----------
+    img : array_like
+        The image/volume to save.
+    path : str
+        The filepath to save the data to.
+    """
     _, ext = os.path.splitext(path)
     ext = ext.strip('.').lower()
 
@@ -231,6 +260,17 @@ def save_image(img, path):
 
 
 def save_images(img, path, ext='png'):
+    """Save a sequence of images.
+
+    Parameters
+    ----------
+    img : array_like
+        The image/volume to save.
+    path : str
+        The filepath to save the data to.
+    ext : str
+        The file extension to save each image with.
+    """
     if os.path.isfile(path) or img.ndim == 2:
         save_image(img, path)
     elif img.ndim == 3:
@@ -245,8 +285,26 @@ def save_images(img, path, ext='png'):
             imsave(os.path.join(path, fpath), img[i])
 
 def save_npy(img, path):
+    """Save an image to a numpy array file.
+
+    Parameters
+    ----------
+    img : array_like
+        The image/volume to save.
+    path : str
+        The filepath to save the data to.
+    """
     np.save(path, img)
 
 
 def save_tiff(img, path):
+    """Save an image to TIFF format.
+
+    Parameters
+    ----------
+    img : array_like
+        The image/volume to save.
+    path : str
+        The filepath to save the data to.
+    """
     imsave(path, img, plugin='tifffile')
