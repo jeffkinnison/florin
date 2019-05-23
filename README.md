@@ -99,7 +99,7 @@ The original FLoRIN paper
 ```
 @article{shahbazi2018flexible,
   title={Flexible Learning-Free Segmentation and Reconstruction of Neural Volumes},
-  author={Shahbazi, Ali and Kinnison, Jeffery and Vescovi, Rafael and Du, Ming and Hill, Robert and J{\"o}sch, Maximilian and Takeno, Marc and Zeng, Hongkui and Da Costa, Nuno Ma{\c{c}}arico and Grutzendler, Jaime and others},
+  author={Shahbazi, Ali and Kinnison, Jeffery and Vescovi, Rafael and Du, Ming and Hill, Robert and J{\"o}sch, Maximilian and Takeno, Marc and Zeng, Hongkui and Da Costa, Nuno Ma{\c{c}}arico and Grutzendler, Jaime and Kasthuri, Narayanan and Scheirer, Walter},
   journal={Scientific reports},
   volume={8},
   number={1},
