@@ -35,7 +35,7 @@ tile
     Split a single array into sub-arrays.
 """
 
-from .classify import classify, FlorinClassifier
+from .classification import classify, FlorinClassifier
 from .closure import florinate
 from .io import load, save
 from .tiling import tile, join
@@ -45,6 +45,6 @@ from .pipelines import MultiprocessingPipeline as Multiprocess
 from .pipelines import MultithreadingPipeline as Multithread
 from .pipelines import SerialPipeline as Serial
 from .pipelines import WorkQueuePipeline as WorkQueue
-from .reconstruct import reconstruct
+from .reconstruction import reconstruct
 
 bounds_classifier = FlorinClassifier
