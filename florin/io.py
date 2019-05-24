@@ -92,8 +92,10 @@ def load_hdf5(path, key='stack'):
     -------
     data : numpy.ndarray
     """
-    with h5py.File(path, 'r') as f:
-        img = f[key]
+    f = h5py.File(path, 'r')
+    img = f[key]
+    img.file_object = f
+
     return img
 
 
