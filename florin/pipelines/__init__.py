@@ -16,6 +16,7 @@ WorkQueuePipeline
     Distributed computing using Work Queue to manage tasks.
 """
 
+from .pipeline import Pipeline
 from .balsam import BalsamPipeline
 from .mpi import MPIPipeline
 from .multiprocess import MultiprocessingPipeline
