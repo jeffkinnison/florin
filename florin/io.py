@@ -93,7 +93,7 @@ def load_hdf5(path, key='stack'):
     data : numpy.ndarray
     """
     with h5py.File(path, 'r') as f:
-        img = f[key][:]
+        img = f[key]
     return img
 
 
@@ -186,8 +186,8 @@ def save(img, path, **kwargs):
     img
         The unaltered image/volume.
 
-    Additional Parameters
-    ---------------------
+    Other Parameters
+    ----------------
     See ``save_hdf5``, ``save_image``, ``save_images``, ``save_npy``, and
     ``save_tiff`` for filetype-specific arguments.
 
