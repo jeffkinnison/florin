@@ -9,11 +9,9 @@ Pipeline
 import collections
 import functools
 import inspect
-try:
-    import cpickle as pkl
-except ImportError:
-    import pickle as pkl
 import re
+
+import dill
 
 from florin.compose import compose
 from florin.tiling import join
@@ -77,14 +75,29 @@ class Pipeline(object):
         self.operations[idx] = func
 
     def add(self, func):
+        """Append a callable to this pipeline.
+
+        Parameters
+        ----------
+        func : callable
+            New function to add.
+        """
         self.operations.append(func)
 
     def dump(self, path):
+        """Save this pipeline to file.
+
+        Parameters
+        ----------
+        path : str
+            Path to the file to write this pipeline to.
+        """
         with open(path, 'w') as f:
-            pkl.dump(self, path)
+            dill.dump(self, path)
 
     def dumps(self):
-        return pkl.dumps(self)
+        """Serialize this pipeline as a string."""
+        return dill.dumps(self)
 
     def run(self, data):
         """Run data through the pipeline.
