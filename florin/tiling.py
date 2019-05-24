@@ -58,19 +58,19 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
     # Normalize the shape and stride tuples to match the dimensionality of img.
     if shape is None:
         shape = img.shape
-    elif len(shape) < img.ndim:
+    elif len(shape) < len(img.shape):
         shape = img.shape[:len(shape) + 1] + shape
 
     if stride is None:
         stride = tuple([i for i in shape])
-    elif len(stride) < img.ndim:
+    elif len(stride) < len(img.shape):
         stride = img.shape[:len(shape) + 1] + stride
 
     if offset is None:
         offset = (0, 0, 0)
 
     # Try to throw some useful errors if there are problems.
-    if len(shape) != len(stride) or len(shape) > img.ndim or len(stride) > img.ndim:
+    if len(shape) != len(stride) or len(shape) > len(img.shape) or len(stride) > len(img.shape):
         print(shape, stride, img.ndim)
         raise DimensionMismatchError()
 
@@ -98,7 +98,7 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
     for i in range(start_block, n_blocks):
         idx = np.asarray(np.unravel_index(i, blocked_shape))
         start = idx * stride
-        slices = [slice(start[j], start[j] + shape[j]) for j in range(img.ndim)]
+        slices = [slice(start[j], start[j] + shape[j]) for j in range(len(shape))]
         yield img[tuple(slices)], \
               dict(original_shape=img.shape, origin=tuple(start))
 
