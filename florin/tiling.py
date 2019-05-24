@@ -12,7 +12,6 @@ import h5py
 import numpy as np
 
 from florin.closure import florinate
-from florin.backend.numpy import FlorinArray
 
 
 class DimensionMismatchError(ValueError):
@@ -30,7 +29,7 @@ class ShapeStepMismatchError(ValueError):
     pass
 
 
-def tile_generator(img, shape=None, stride=None, tile_store=None):
+def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
     """Tile data into n-dimensional subdivisions.
 
     Parameters
@@ -67,6 +66,9 @@ def tile_generator(img, shape=None, stride=None, tile_store=None):
     elif len(stride) < img.ndim:
         stride = img.shape[:len(shape) + 1] + stride
 
+    if offset is None:
+        offset = (0, 0, 0)
+
     # Try to throw some useful errors if there are problems.
     if len(shape) != len(stride) or len(shape) > img.ndim or len(stride) > img.ndim:
         print(shape, stride, img.ndim)
@@ -83,14 +85,17 @@ def tile_generator(img, shape=None, stride=None, tile_store=None):
 
     shape = np.asarray(shape)
     stride = np.asarray(stride)
+    offset = np.asarray(offset)
 
     # Get the number of volumes
     img_shape = np.asarray(img.shape)
-    blocked_shape = (img_shape / stride).astype(np.int32)
+    blocked_shape = (img_shape - offset / stride).astype(np.int32)
     n_blocks = int(np.prod(blocked_shape))
 
+    start_block = np.ravel_multi_index
+
     # Iterate over the blocks and return them on request
-    for i in range(n_blocks):
+    for i in range(start_block, n_blocks):
         idx = np.asarray(np.unravel_index(i, blocked_shape))
         start = idx * stride
         slices = [slice(start[j], start[j] + shape[j]) for j in range(img.ndim)]
