@@ -10,7 +10,6 @@ import numpy as np
 
 from skimage.color import label2rgb
 
-from florin.backend.numpy import FlorinArray
 from florin.closure import florinate
 
 

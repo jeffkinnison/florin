@@ -8,8 +8,6 @@ compose
 
 import functools
 
-from florin.backend.numpy import FlorinArray
-
 
 def compose(*functions):
     """Compose a chain of functions on an initial input.
