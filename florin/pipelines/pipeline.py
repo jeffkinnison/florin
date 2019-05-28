@@ -74,6 +74,9 @@ class Pipeline(object):
     def __setitem__(self, idx, func):
         self.operations[idx] = func
 
+    def __len__(self):
+        return len(self.operations)
+
     def add(self, func):
         """Append a callable to this pipeline.
 
