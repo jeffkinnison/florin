@@ -100,13 +100,19 @@ out = pipeline()
 
 # Maintainers
 
-- (Jeff Kinnison)[https://github.com/jeffkinnison "Jeff Kinnison on GitHub"]
+- [Jeff Kinnison](https://github.com/jeffkinnison "Jeff Kinnison on GitHub")
 
 # Contributing
 
+To contribute, fork the main repo, add your code, and submit a pull request! FLoRIN follows PEP-8 guidelines and uses `numpydoc` style for documentation.
+
+# Issues
+
+If you run across a bug, open an issue with a description, system information, and a code snippet that reprodices the error.
+
 # License
 
-(MIT License)[https://github.com/jeffkinnison/florin/blob/master/LICENSE "MIT License"]
+[MIT License](https://github.com/jeffkinnison/florin/blob/master/LICENSE "MIT License")
 
 # Cite FLoRIN
 
