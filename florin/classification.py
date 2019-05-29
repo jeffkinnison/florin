@@ -12,6 +12,7 @@ classify
 """
 
 import collections
+import numbers
 
 import numpy as np
 
@@ -39,7 +40,7 @@ def classify(obj, *classes):
     In a typical FLoRIN pipeline, florin.reconstruct() will be called
     immediately after florin.classify().
     """
-    obj.class_label = 0
+    obj.class_label = None
     for c in classes:
         if c.classify(obj):
             obj.class_label = c.label
@@ -68,9 +69,12 @@ class FlorinClassifier(object):
 
         for key, val in kwargs.items():
             if not isinstance(val, collections.Sequence) or len(val) == 1:
-                self.bounds[key] = (-float('inf'), val)
+                if isinstance(val, numbers.Number):
+                    self.bounds[key] = (-float('inf'), val)
+                elif isinstance(val, str):
+                    self.bounds[key] = ('', val)
             else:
-                self.bounds[key] = val
+                self.bounds[key] = (min(val), max(val))
 
     def classify(self, obj):
         """Determine if an object is in this class.
@@ -87,7 +91,9 @@ class FlorinClassifier(object):
             no boundaries were provided, return True (e.g., the default class).
         """
         if len(self.bounds) > 0:
-            return all([v[0] <= obj[k] <= v[1] for k, v in self.bounds.items()])
+            return all(
+                [v[0] <= getattr(obj, k) <= v[1]
+                 for k, v in self.bounds.items()])
         else:
             return True
 
