@@ -49,10 +49,12 @@ def test_load(load_setup):
     assert np.all(loaded == data)
 
     loaded = load()(os.path.join(tmpdir, 'data.h5'))
-    assert np.all(loaded == data)
+    assert isinstance(loaded, h5py.Dataset)
+    assert np.all(loaded[:] == data)
 
     loaded = load()(os.path.join(tmpdir, 'data.h5'), key='foo')
-    assert np.all(loaded == data)
+    assert isinstance(loaded, h5py.Dataset)
+    assert np.all(loaded[:] == data)
 
     loaded = load()(os.path.join(tmpdir, 'data.tif'))
     assert np.all(loaded == data)
@@ -76,10 +78,12 @@ def test_load_hdf5(load_setup):
     data, tmpdir = load_setup
 
     loaded = load_hdf5(os.path.join(tmpdir, 'data.h5'))
-    assert np.all(loaded == data)
+    assert isinstance(loaded, h5py.Dataset)
+    assert np.all(loaded[:] == data)
 
     loaded = load_hdf5(os.path.join(tmpdir, 'data.h5'), key='foo')
-    assert np.all(loaded == data)
+    assert isinstance(loaded, h5py.Dataset)
+    assert np.all(loaded[:] == data[:])
 
 
 def test_load_image(load_setup):
