@@ -59,15 +59,15 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
     if shape is None:
         shape = img.shape
     elif len(shape) < len(img.shape):
-        shape = img.shape[:len(shape) + 1] + shape
+        shape = shape + img.shape[:len(shape) + 1]
 
     if stride is None:
         stride = tuple([i for i in shape])
     elif len(stride) < len(img.shape):
-        stride = img.shape[:len(shape) + 1] + stride
+        stride = stride + img.shape[:len(stride) + 1]
 
     if offset is None:
-        offset = (0, 0, 0)
+        offset = tuple([0 for _ in range(len(img.shape))])
 
     # Try to throw some useful errors if there are problems.
     if len(shape) != len(stride) or len(shape) > len(img.shape) or len(stride) > len(img.shape):
@@ -89,17 +89,23 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
 
     # Get the number of volumes
     img_shape = np.asarray(img.shape)
-    blocked_shape = (img_shape - offset / stride).astype(np.int32)
+    blocked_shape = ((img_shape - offset) / stride).astype(np.int32)
     n_blocks = int(np.prod(blocked_shape))
 
-    start_block = np.ravel_multi_index
+    # start_block = np.ravel_multi_index
 
     # Iterate over the blocks and return them on request
-    for i in range(start_block, n_blocks):
+    for i in range(n_blocks):
         idx = np.asarray(np.unravel_index(i, blocked_shape))
         start = idx * stride
-        slices = [slice(start[j], start[j] + shape[j]) for j in range(len(shape))]
-        yield img[tuple(slices)], \
+        end = start + shape
+        over = np.where(end > np.asarray(img.shape))
+        end[over] = np.asarray(img.shape)[over]
+        # print(end)
+        slices = [slice(start[j], end[j]) for j in range(len(shape))]
+        block = img[tuple(slices)]
+        # if block.size > 0:
+        yield block, \
               dict(original_shape=img.shape, origin=tuple(start))
 
 
@@ -123,11 +129,14 @@ def join_tiles(tiles):
     for tile, metadata in tiles:
         if out is None:
             out = np.zeros(metadata['original_shape'], dtype=tile.dtype)
-        slices = [slice(metadata['origin'][i], metadata['origin'][i] + tile.shape[i])
-                  for i in range(tile.ndim)]
+
+        start = np.asarray(metadata['origin'])
+        end = start + np.asarray(tile.shape)
+        slices = [slice(start[i], end[i]) for i in range(tile.ndim)]
+
         out[tuple(slices)] += tile
 
-    return out
+    return out.astype(tile.dtype)
 
 
 tile = florinate(tile_generator)
