@@ -1,4 +1,12 @@
 language: python
+env:
+  global:
+    - HYDRA_LAUNCHER=fork
+    - OMPI_MCA_plm=isolated
+    - OMPI_MCA_rmaps_base_oversubscribe=true
+  matrix:
+    - MPI=mpich
+    - MPI=openmpi
 matrix:
   include:
       - name: "Python 3.5-3.6 on Trusty"
@@ -6,14 +14,25 @@ matrix:
           - "3.5"
           - "3.6"
         dist: "trusty"
-      - name: "Python 3.7+ on Xenial"
-        python:
-          - "3.7"
-        dist: "xenial"
+      # - name: "Python 3.7+ on Xenial"
+      #   python:
+      #     - "3.7"
+      #   dist: "xenial"
+cache:
+  apt: true
+
+addons:
+  apt:
+      update: true
+  homebrew:
+      update: true
 before_install:
   - test -n $CC  && unset CC
   - test -n $CXX && unset CXX
-  - sudo apt-get install -y libcr-dev mpich
+  - if [ "$MPI" == "mpich"]; then
+  - sudo apt-get install -y mpich libmpich-dev
+  - else
+  - sudo apt-get install -y
   - pip install --upgrade pip
   - pip install --upgrade pytest
 install:
