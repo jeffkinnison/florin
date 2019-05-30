@@ -1,15 +1,20 @@
 language: python
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+matrix:
+  include:
+      - name: "Python 2.7, 3.5-3.6 on Trusty"
+        python:
+          - "2.7"
+          - "3.5"
+          - "3.6"
+        dist: "trusty"
+      - name: "Python 3.7+ on Xenial"
+        python:
+          - "3.7"
+        dist: "xenial"
 before_install:
   - sudo apt-get install -y libcr-dev mpich2 mpich2-doc
   - pip install --upgrade pip
-  - pip install --only-binary=numpy,scipy numpy scipy
   - pip install --upgrade pytest
-install: pip install .
+install: pip install florin
 script:
-  - cd florin 
-  - pytest
+  - python -m pytest tests
