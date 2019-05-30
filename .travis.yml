@@ -11,6 +11,8 @@ matrix:
           - "3.7"
         dist: "xenial"
 before_install:
+  - test -n $CC  && unset CC
+  - test -n $CXX && unset CXX
   - sudo apt-get install -y libcr-dev mpich mpich-dev
   - pip install --upgrade pip
   - pip install --upgrade pytest
