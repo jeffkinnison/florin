@@ -16,7 +16,7 @@ before_install:
   - pip install --upgrade pip
   - pip install --upgrade pytest
 install:
-  - cd florin
+  - cd jeffkinnison/florin
   - pip install .
 script:
   - python -m pytest tests
