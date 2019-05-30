@@ -1,9 +1,8 @@
 language: python
 matrix:
   include:
-      - name: "Python 3.4-3.6 on Trusty"
+      - name: "Python 3.5-3.6 on Trusty"
         python:
-          - "3.4"
           - "3.5"
           - "3.6"
         dist: "trusty"
