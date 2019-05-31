@@ -7,7 +7,10 @@ florinate
 
 """
 
+from collections import Sequence
 import functools
+
+from florin.context import FlorinContext
 
 
 def florinate(func):
@@ -59,8 +62,8 @@ def florinate(func):
         def delayed(*args, **kwargs):
             """Wrapper for deferred function calls with persistent arguments"""
             kwargs.update(wrapper_kwargs)
-            if isinstance(args[0], tuple):
-                innerargs = args[0][:-1] + wrapper_args
+            if isinstance(args[0], Sequence) and isinstance(args[0][-1], FlorinContext):
+                innerargs = tuple(args[0][:-1]) + wrapper_args
                 return func(*innerargs, **kwargs), args[0][-1]
             else:
                 innerargs = args + wrapper_args
