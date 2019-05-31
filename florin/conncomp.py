@@ -13,6 +13,15 @@ import skimage.measure
 
 from florin.closure import florinate
 
+
+@florinate
+def label(image, *args, **kwargs):
+    """Wrapper that casts arrays to integers before labeling"""
+    if image.dtype == np.bool:
+        image = image.astype(np.uint8)
+    return skimage.measure.label(image, *args, **kwargs)
+
+
 @florinate
 def regionprops(image, **kwargs):
     """Compute the properties of connected components.
@@ -40,5 +49,3 @@ def regionprops(image, **kwargs):
             obj.depth, obj.height, obj.width = np.asarray(obj.bbox[3:]) - np.asarray(obj.bbox[:3])
 
     return objs
-
-label = florinate(skimage.measure.label)
