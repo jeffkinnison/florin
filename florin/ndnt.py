@@ -88,8 +88,7 @@ def ndnt(img, shape=None, threshold=0.25, inplace=False):
     sums, counts = integral_image_sum(integral_image(img), shape=shape)
 
     # Compute the thresholding and binarize the image
-    out = np.ones(np.prod(img.shape), dtype=np.uint8)
-    # out.__dict__ = img.__dict__
+    out = np.ones(img.ravel().shape, dtype=np.uint8)
     out[img.ravel() * counts.ravel() <= sums.ravel() * threshold] = 0
 
     # Return the binarized image in the correct shape
@@ -202,7 +201,8 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
     if return_counts:
         counts = bounds[:, 1] - bounds[:, 0]
         counts[counts == 0] = 1
-        counts = functools.reduce(np.multiply, counts)
+        counts = functools.reduce(np.multiply, counts,
+                                  np.ones(sums.shape, dtype=sums.dtype))
         return sums, counts
     else:
         return sums
