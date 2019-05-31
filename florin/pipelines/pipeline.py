@@ -53,7 +53,7 @@ class Pipeline(object):
                         self.operations.pop(j)
             if isinstance(operation, Pipeline):
                 try:
-                    if self.operations[i + 1].__name__ is not 'reconstruct':
+                    if not re.search(r'reconstruct', self.operations[i + 1].__name__):
                         self.operations.insert(i + 1, join())
                 except IndexError:
                     self.operations.append(join())
