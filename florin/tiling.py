@@ -12,6 +12,7 @@ import h5py
 import numpy as np
 
 from florin.closure import florinate
+from florin.context import FlorinContext
 
 
 class DimensionMismatchError(ValueError):
@@ -92,10 +93,12 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
     blocked_shape = ((img_shape - offset) / stride).astype(np.int32)
     n_blocks = int(np.prod(blocked_shape))
 
-    # start_block = np.ravel_multi_index
+    start_block = np.ravel_multi_index(
+        tuple([np.array([i]) for i in offset]),
+        img.shape)[0]
 
     # Iterate over the blocks and return them on request
-    for i in range(n_blocks):
+    for i in range(start_block, n_blocks):
         idx = np.asarray(np.unravel_index(i, blocked_shape))
         start = idx * stride
         end = start + shape
@@ -106,7 +109,7 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
         block = img[tuple(slices)]
         # if block.size > 0:
         yield block, \
-              dict(original_shape=img.shape, origin=tuple(start))
+              FlorinContext(original_shape=img.shape, origin=tuple(start))
 
 
 def join_tiles(tiles):
