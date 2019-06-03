@@ -1,4 +1,9 @@
+mpi4py
+numpy
 numpydoc
+pathos
+scikit-image
+scipy
 sphinx
 sphinxcontrib-contentui
 sphinx-rtd-theme
