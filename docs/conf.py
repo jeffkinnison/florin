@@ -11,6 +11,11 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
+import os
+import sys
+from unittest.mock import MagicMock
+sys.path.insert(0, os.path.abspath('..'))
+
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
@@ -18,11 +23,6 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['mpi4py']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
-import os
-import sys
-from unittest.mock import MagicMock
-sys.path.insert(0, os.path.abspath('..'))
 
 import florin
 import florin.pipelines
