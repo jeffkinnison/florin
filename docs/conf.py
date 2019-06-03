@@ -21,7 +21,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return MagicMock()
 
-MOCK_MODULES = ['mpi4py', mpi4py.futures]
+MOCK_MODULES = ['mpi4py', 'mpi4py.futures']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 autodoc_mock_imports = ['mpi4py', 'mpi4py.futures']
