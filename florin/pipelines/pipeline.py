@@ -59,7 +59,7 @@ class Pipeline(object):
                     self.operations.append(join())
 
         self.operations = compose(*self.operations)
-        if isinstance(data, str) or not inspect.isgenerator(data) and not isinstance(data, collections.Sequence):
+        if isinstance(data, (str, tuple)) or not inspect.isgenerator(data) and not isinstance(data, collections.Sequence):
             data = [data]
         return self.run(data)
 
