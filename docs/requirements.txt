@@ -1,5 +1,4 @@
 h5py
-mpi4py
 numpy
 numpydoc
 pathos
