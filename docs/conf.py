@@ -16,13 +16,15 @@ import sys
 from unittest.mock import MagicMock
 sys.path.insert(0, os.path.abspath('..'))
 
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
+# class Mock(MagicMock):
+#     @classmethod
+#     def __getattr__(cls, name):
+#         return MagicMock()
+#
+# MOCK_MODULES = ['mpi4py']
+# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-MOCK_MODULES = ['mpi4py']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+autodoc_mock_imports = ['mpi4py', 'mpi4py.futures']
 
 import florin
 import florin.pipelines
@@ -76,7 +78,6 @@ html_static_path = ['_static']
 
 autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
-autodoc_mock_imports = ['mpi4py']
 numpydoc_class_members_toctree = False
 
 
