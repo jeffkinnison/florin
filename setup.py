@@ -11,7 +11,6 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
-        'Intended Audience :: Users',
         'License :: MIT',
         'Topic :: Computer Vision :: Image Segmentation',
         'Topic :: Computer Vision :: Image Processing Pipeline',
