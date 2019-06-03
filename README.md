@@ -130,3 +130,18 @@ The original FLoRIN paper
   publisher={Nature Publishing Group}
 }
 ```
+
+# Special Thanks
+
+A number of people contributed to FLoRIN's development who deserve a shout out:
+
+## Original Concept
+    - [Elia Shahbazi](https://github.com/elia-shahbazi)
+    - [Jeff Kinnison](https://github.com/jeffkinnison)
+    - [Walter Scheirer](https://www.wjscheirer.com/)
+
+## Early Development (Pre-Alpha)
+    - [Antonio Minondo](https://github.com/aminondo)
+    - [Cami Carballo](https://github.com/camicarballo)
+    - [Kevin Choy](https://github.com/kevinchoy)
+    - [Tom Marshall](https://github.com/ThomasWMarshall)
