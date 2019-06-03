@@ -25,10 +25,7 @@ addons:
 before_install:
   - test -n $CC  && unset CC
   - test -n $CXX && unset CXX
-  - if [ "$MPI" == "mpich"]; then
   - sudo apt-get install -y mpich libmpich-dev
-  - else
-  - sudo apt-get install -y
   - pip install --upgrade pip
   - pip install --upgrade pytest
 install:
