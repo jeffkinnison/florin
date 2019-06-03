@@ -1,0 +1,34 @@
+language: python
+matrix:
+  include:
+      - name: "Python 3.5-3.6 on Trusty"
+        python:
+          - "3.5"
+          - "3.6"
+        dist: "trusty"
+        env:
+          - MPI=mpich
+      - name: "Python 3.7+ on Xenial"
+        python:
+          - "3.7"
+        dist: "xenial"
+        env:
+          - MPI=mpich
+cache:
+  apt: true
+
+addons:
+  apt:
+      update: true
+  homebrew:
+      update: true
+before_install:
+  - test -n $CC  && unset CC
+  - test -n $CXX && unset CXX
+  - sudo apt-get install -y mpich libmpich-dev
+  - pip install --upgrade pip
+  - pip install --upgrade pytest
+install:
+  - pip install .
+script:
+  - python -m pytest tests
