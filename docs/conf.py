@@ -12,10 +12,19 @@
 #
 import os
 import sys
+from unittest.mock import MagicMock
 sys.path.insert(0, os.path.abspath('..'))
 
 import florin
 import florin.pipelines
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+MOCK_MODULES = ['mpi4py']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- Project information -----------------------------------------------------
 
@@ -68,6 +77,7 @@ autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
 autodoc_mock_imports = ['mpi4py']
 numpydoc_class_members_toctree = False
+
 
 # Napoleon settings
 napoleon_google_docstring = True
