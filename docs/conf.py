@@ -66,6 +66,7 @@ html_static_path = ['_static']
 
 autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
+autodoc_mock_imports = ['mpi4py']
 numpydoc_class_members_toctree = False
 
 # Napoleon settings
