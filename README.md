@@ -27,19 +27,16 @@ seeks to scale or be reproduced in multiple locations.
 
 # Installation
 
-FLoRIN is compatible with of Python 2.7 and Python 3.4+. To install FLoRIN, run
+FLoRIN is compatible with Python 3.4+. To install FLoRIN, run
 
 ```
 # pip
 pip install florin
 
-# Anaconda
-conda install -c jeffkinnison florin
-```
 
 # Documentation
 
-Full documentation of the FLoRIN pipeline may be found at https://readthedocs.io/florin
+Full documentation of the FLoRIN pipeline may be found at <https://florin.readthedocs.io>
 
 # Getting Started
 
