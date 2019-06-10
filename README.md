@@ -133,12 +133,22 @@ The original FLoRIN paper
 A number of people contributed to FLoRIN's development who deserve a shout out:
 
 ## Original Concept
-    - [Elia Shahbazi](https://github.com/elia-shahbazi)
-    - [Jeff Kinnison](https://github.com/jeffkinnison)
-    - [Walter Scheirer](https://www.wjscheirer.com/)
+
+- [Elia Shahbazi](https://github.com/elia-shahbazi)
+- [Jeff Kinnison](https://github.com/jeffkinnison)
+- [Walter Scheirer](https://www.wjscheirer.com/)
 
 ## Early Development (Pre-Alpha)
-    - [Antonio Minondo](https://github.com/aminondo)
-    - [Cami Carballo](https://github.com/camicarballo)
-    - [Kevin Choy](https://github.com/kevinchoy)
-    - [Tom Marshall](https://github.com/ThomasWMarshall)
+
+- [Antonio Minondo](https://github.com/aminondo)
+- [Cami Carballo](https://github.com/camicarballo)
+- [Kevin Choy](https://github.com/kevinchoy)
+- [Tom Marshall](https://github.com/ThomasWMarshall)
+
+# FLoRIN Experimental Code
+
+The code for the original FLoRIN paper can be found [here](https://github.com/CVRL/florin-scirep "FLoRIN Scientific Reports code").
+
+The code for "Learning-Free Iris Segmentation Revisited: A First Step Toward Fast Volumetric Operation Over Video Samples" can be found [here](https://github.com/jeffkinnison/florin-iris "FLoRIN ICB 2019 Code").
+
+We are in the process of reimplementing these code bases using the official FLoRIN package here and will provide that code as a separate branch in each repository on completion.
