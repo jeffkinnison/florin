@@ -29,9 +29,10 @@ seeks to scale or be reproduced in multiple locations.
 
 FLoRIN is compatible with Python 3.4+. To install FLoRIN, run
 
-```
+```bash
 # pip
 pip install florin
+```
 
 
 # Documentation
