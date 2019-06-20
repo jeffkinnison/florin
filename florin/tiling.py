@@ -12,7 +12,7 @@ import h5py
 import numpy as np
 
 from florin.closure import florinate
-from florin.context import FlorinContext
+from florin.context import FlorinMetadata
 
 
 class DimensionMismatchError(ValueError):
@@ -47,7 +47,7 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
     tile : florin.FlorinVolume
         A subdivision of ``img``. Subdivisions are yielded in sequence from the
         start of ``img``.
-    metadata : dictionary
+    metadata : florin.context.Metadata
         Key/value store of metadata, e.g. for joining tiles.
 
     Notes
@@ -104,12 +104,10 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
         end = start + shape
         over = np.where(end > np.asarray(img.shape))
         end[over] = np.asarray(img.shape)[over]
-        # print(end)
         slices = [slice(start[j], end[j]) for j in range(len(shape))]
         block = img[tuple(slices)]
-        # if block.size > 0:
         yield block, \
-              FlorinContext(original_shape=img.shape, origin=tuple(start))
+              FlorinMetadata(original_shape=img.shape, origin=tuple(start))
 
 
 def join_tiles(tiles):
