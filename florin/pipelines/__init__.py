@@ -18,11 +18,12 @@ WorkQueuePipeline
 
 from .pipeline import Pipeline
 from .balsam import BalsamPipeline
-from .mpi import MPIPipeline
+from .mpi import MPIPipeline, MPITaskQueuePipeline
 from .multiprocess import MultiprocessingPipeline
 from .multithread import MultithreadingPipeline
 from .serial import SerialPipeline
 from .workqueue import WorkQueuePipeline
 
-__all__ = ['BalsamPipeline', 'MPIPipeline', 'MultiprocessingPipeline',
-           'MultithreadingPipeline', 'SerialPipeline', 'WorkQueuePipeline']
+__all__ = ['BalsamPipeline', 'MPIPipeline', 'MPITaskQueuePipeline',
+           'MultiprocessingPipeline', 'MultithreadingPipeline',
+           'SerialPipeline', 'WorkQueuePipeline']
