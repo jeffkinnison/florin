@@ -1,2 +1,2 @@
-from .florin_graph import FlorinOrderedDiGraph
+from .florin_graph import FlorinOrderedMultiDiGraph
 from .florin_node import FlorinNode

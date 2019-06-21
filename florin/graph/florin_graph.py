@@ -18,7 +18,7 @@ from florin.graph.florin_node import FlorinNode
 class FlorinOrderedMultiDiGraph(nx.OrderedMultiDiGraph):
 
     def __init__(self, incoming_graph_data=None, **attrs):
-        super(FlorinOrderedDiGraph, self).__init__(
+        super(FlorinOrderedMultiDiGraph, self).__init__(
             incoming_graph_data=incoming_graph_data, **attrs)
 
         self.last = None
