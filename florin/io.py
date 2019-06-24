@@ -227,7 +227,7 @@ def save(img, path, **kwargs):
     return img
 
 
-def save_hdf5(img, path, key='stack'):
+def save_hdf5(img, path, key='stack', overwrite=True):
     """Save an image to HDF5 format.
 
     Parameters
@@ -241,6 +241,9 @@ def save_hdf5(img, path, key='stack'):
         f = h5py.File(path, 'r+')
     else:
         f = h5py.File(path, 'w')
+
+    if overwrite and key in f:
+        del f[key]
     f.create_dataset(key, data=img)
 
 
