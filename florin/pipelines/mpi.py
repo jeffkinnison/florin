@@ -42,7 +42,9 @@ class MPIPipeline(Pipeline):
         self.max_workers = max_workers
 
     def run(self, data):
+        from mpi4py import MPI
         from mpi4py.futures import MPIPoolExecutor
+        MPI.pickle.__init__(dill.dumps, dill.loads)
 
         with MPIPoolExecutor(max_workers=self.max_workers) as pool:
             result = pool.map(self.operations, data)
