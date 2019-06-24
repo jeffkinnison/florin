@@ -23,5 +23,8 @@ class SerialPipeline(Pipeline):
 
     def run(self, data):
         result = map(self.operations, data)
-        return result if inspect.isgenerator(data) or len(data) > 1 \
-               else next(result)
+        try:
+            return result if inspect.isgenerator(data) or len(data) > 1 \
+                   else next(result)
+        except StopIteration:
+            return None
