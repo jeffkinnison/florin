@@ -74,9 +74,11 @@ class Pipeline(object):
                 operation.args = (in_node,) + operation.args
 
             # Automatically impute references to this pipeline's input
-            for j, arg in enumerate(operation.args):
+            opargs = list(operation.args)
+            for j, arg in enumerate(opargs):
                 if arg is PipelineInput or isinstance(arg, PipelineInput):
-                    operation.args[j] = in_node
+                    opargs[j] = in_node
+            operation.args = tuple(opargs)
 
             for key, arg in operation.kwargs.items():
                 if arg is PipelineInput or isinstance(arg, PipelineInput):
