@@ -37,6 +37,8 @@ class Pipeline(object):
 
     def __init__(self, *operations):
         self.operations = FlorinOrderedMultiDiGraph()
+        in_node = pipeline_input()
+        self.operations.add(in_node)
 
         tiled = False
         subpipe = False
@@ -68,6 +70,17 @@ class Pipeline(object):
                             for dep in operation.args])
             if i > 0 and depcount == 0:
                 operation.args = (operations[i - 1],) + operation.args
+            elif i == 0:
+                operation.args = (in_node,) + operation.args
+
+            # Automatically impute references to this pipeline's input
+            for j, arg in enumerate(operation.args):
+                if arg is PipelineInput or isinstance(arg, PipelineInput):
+                    operation.args[j] = in_node
+
+            for key, arg in operation.kwargs.items():
+                if arg is PipelineInput or isinstance(arg, PipelineInput):
+                    operation.kwargs[key] = in_node
 
             # Insert the operation into the graph.
             self.operations.add(operation)
@@ -104,3 +117,13 @@ class Pipeline(object):
         examples of how to override ``run()``.
         """
         raise NotImplementedError
+
+
+class PipelineInput(object):
+    """Marker to enable using the input to a pipeline as input."""
+    pass
+
+
+@florinate
+def pipeline_input(data):
+    return data
