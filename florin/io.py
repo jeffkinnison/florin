@@ -78,7 +78,7 @@ def load(path, **kwargs):
     return img
 
 
-def load_hdf5(path, key='stack'):
+def load_hdf5(path, key='stack', keep_alive):
     """Load data from an HDF5 file.
 
     Parameters
@@ -92,9 +92,12 @@ def load_hdf5(path, key='stack'):
     -------
     data : h5py.Dataset
     """
-    f = h5py.File(path, 'r')
-    img = f[key]
-    img.file_object = f
+    f = h5py.File(path, 'r+')
+    if keep_alive:
+        img = f[key]
+        img.file_object = f
+    else:
+        img = f[key][:]
 
     return img
 
