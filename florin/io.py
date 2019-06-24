@@ -78,7 +78,7 @@ def load(path, **kwargs):
     return img
 
 
-def load_hdf5(path, key='stack', keep_alive):
+def load_hdf5(path, key='stack', keep_alive=False):
     """Load data from an HDF5 file.
 
     Parameters
