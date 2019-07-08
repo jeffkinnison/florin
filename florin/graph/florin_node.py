@@ -20,7 +20,8 @@ class MetaFlorinNode(type):
         x._counter = count(1)
         return x
 
-class FlorinNode(object, metaclass=MetaFlorinNode):
+
+class FlorinNode(obect, metaclass=MetaFlorinNode):
     """Graph node for partial function application with data dependencies.
 
     Parameters
