@@ -54,7 +54,7 @@ class MPIPipeline(Pipeline):
 class MPITaskQueuePipeline(Pipeline):
     """MPI-based multiprocessing pipeline.
 
-    Approximates a map operation using a task queue build on MPI send/recv
+    Approximates a map operation using a task queue built on MPI send/recv
     semantics. Use when MPI_Comm_spawn is unavailable.
 
     Parameters
@@ -74,58 +74,21 @@ class MPITaskQueuePipeline(Pipeline):
     def run(self, data):
         from mpi4py import MPI
         MPI.pickle.__init__(dill.dumps, dill.loads)
-
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
         size = comm.Get_size()
-        status = MPI.Status()
 
-        tags = {'READY': 0, 'DONE': 1, 'EXIT': 2, 'START': 3}
+        idx = rank
 
-        if rank == 0:
-            result = []
-
-            n_workers = size - 1
-            done = False
-
-            while n_workers > 0:
-                worker_return = comm.recv(
-                    source=MPI.ANY_SOURCE,
-                    tag=MPI.ANY_TAG,
-                    status=status)
-                source = status.Get_source()
-                tag = status.Get_tag()
-
-                if tag == tags['READY']:
-                    try:
-                        task_data = next(data) if inspect.isgenerator(data) \
-                                    else data.pop(0)
-                        task_tag = tags['START']
-                    except (IndexError, StopIteration):
-                        task_data = None
-                        task_tag = tags['EXIT']
-
-                    comm.send((self.operations, task_data),
-                              dest=source, tag=task_tag)
-                elif tag == tags['DONE']:
-                    result.append(worker_return)
-                elif tag == tags['EXIT']:
-                    n_workers -= 1
-
-            MPI.Finalize()
-            return result
+        results = []
+        if not inspect.isgenerator(data):
+            while idx < len(data):
+                in_data = data[idx]
+                results.append(self.operations(in_data))
+                idx += size
         else:
-            done = False
-            while not done:
-                comm.send(None, dest=0, tag=tags['READY'])
-                ops, task_data = comm.recv(source=0,
-                                           tag=MPI.ANY_TAG, status=status)
-                tag = status.Get_tag()
-                if tag == tags['START']:
-                    result = ops(task_data)
-                    comm.send(result, dest=0, tag=tags['DONE'])
-                elif tag == tags['EXIT']:
-                    done = True
-
-            comm.send(None, dest=0, tag=tags['EXIT'])
-            sys.exit()
+            for i, in_data in enumerate(data):
+                if i == idx:
+                    results.append(self.operations(in_data))
+                    idx += size
+        return results
