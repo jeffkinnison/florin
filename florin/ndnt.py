@@ -89,7 +89,7 @@ def ndnt(img, shape=None, threshold=0.25, inplace=False):
 
     # Compute the thresholding and binarize the image
     out = np.ones(img.ravel().shape, dtype=np.uint8)
-    out[img.ravel() * counts.ravel() <= sums.ravel() * threshold] = 0
+    out[np.where(100 * img.ravel() * counts.ravel() <= 100 * sums.ravel() * threshold)] = 0
 
     # Return the binarized image in the correct shape
     return np.abs(1 - np.reshape(out, img.shape)).astype(np.uint8)
@@ -123,7 +123,7 @@ def integral_image(img, inplace=False):
     """
     int_img = np.copy(img) if not inplace else img
     for i in range(len(img.shape) - 1, -1, -1):
-        int_img = np.cumsum(int_img, axis=i)
+        int_img = np.cumsum(int_img, axis=i, dtype=np.int32)
     return int_img
 
 
@@ -164,7 +164,7 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
     shape = np.round(shape / 2).astype(np.int32).reshape((shape.size, 1))
 
     # Set up vectorized bounds checking.
-    img_shape = np.asarray(int_img.shape)
+    img_shape = np.asarray(int_img.shape, dtype=np.int32)
 
     # Set the lower and upper bounds for the rectangle around each pixel
     lo = (grids.copy() - shape.T)[0]
@@ -188,10 +188,11 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
     indices = np.array(list(itertools.product([1, 0],
                                               repeat=len(int_img.shape))))
     ref = sum(indices[0]) & 1
-    parity = np.array([1 if (sum(i) & 1) == ref else -1 for i in indices])
+    parity = np.array([1 if (sum(i) & 1) == ref else -1 for i in indices],
+                      dtype=np.int32)
 
     # Compute the pixel neighborhood sums.
-    sums = np.zeros(int_img.shape)
+    sums = np.zeros(int_img.shape, dtype=np.int32)
     for i in range(len(indices)):
         idx = tuple(bounds[j, indices[i][j]] for j in range(len(indices[i])))
         sums += parity[i] * int_img[idx]
