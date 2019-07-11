@@ -21,7 +21,7 @@ class MetaFlorinNode(type):
         return x
 
 
-class FlorinNode(obect, metaclass=MetaFlorinNode):
+class FlorinNode(object, metaclass=MetaFlorinNode):
     """Graph node for partial function application with data dependencies.
 
     Parameters
