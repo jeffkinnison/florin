@@ -33,6 +33,7 @@ setup(
     install_requires=[
         'h5py',
         'mpi4py>=3.0.0',
+        'networkx',
         'numpy',
         'pathos',
         'scikit-image',
