@@ -96,7 +96,9 @@ def ndnt(img, shape=None, threshold=0.25, sums=None, counts=None):
 
     # Compute the thresholding and binarize the image
     out = np.ones(img.ravel().shape, dtype=np.uint8)
-    out[np.where(100 * img.ravel() * counts.ravel() <= sums.ravel() * int(100 * threshold))] = 0
+    lhs = (img.ravel() * counts.ravel())
+    rhs = (sums.ravel() * threshold)
+    out[np.where(lhs <= rhs)] = 0
 
     # Return the binarized image in the correct shape
     return np.abs(1 - np.reshape(out, img.shape)).astype(np.uint8)
@@ -130,7 +132,7 @@ def integral_image(img, inplace=False):
     """
     int_img = np.copy(img) if not inplace else img
     for i in range(len(img.shape) - 1, -1, -1):
-        int_img = np.cumsum(int_img, axis=i, dtype=np.int32)
+        int_img = np.cumsum(int_img, axis=i)
     return int_img
 
 
@@ -171,7 +173,7 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
     shape = np.round(shape / 2).astype(np.int32).reshape((shape.size, 1))
 
     # Set up vectorized bounds checking.
-    img_shape = np.asarray(int_img.shape, dtype=np.int32)
+    img_shape = np.asarray(int_img.shape)
 
     # Set the lower and upper bounds for the rectangle around each pixel
     lo = (grids.copy() - shape.T)[0]
@@ -195,14 +197,13 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
     indices = np.array(list(itertools.product([1, 0],
                                               repeat=len(int_img.shape))))
     ref = sum(indices[0]) & 1
-    parity = np.array([1 if (sum(i) & 1) == ref else -1 for i in indices],
-                      dtype=np.int32)
+    parity = np.array([1 if (sum(i) & 1) == ref else -1 for i in indices])
 
     # Compute the pixel neighborhood sums.
-    sums = np.zeros(int_img.shape, dtype=np.int32)
+    sums = np.zeros(int_img.shape)
     for i in range(len(indices)):
         idx = tuple(bounds[j, indices[i][j]] for j in range(len(indices[i])))
-        sums += np.multiply(int_img[idx], parity[i], dtype=np.int32)
+        sums += np.multiply(int_img[idx], parity[i])
 
     # If pixel neighorhood sizes are requested, compute the area/volume of each
     # neighborhood.
