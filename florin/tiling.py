@@ -90,7 +90,10 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
 
     # Get the number of volumes
     img_shape = np.asarray(img.shape)
-    blocked_shape = ((img_shape - offset) / stride).astype(np.int32)
+    blocked_shape = ((img_shape - offset) / stride)
+    for i in range(1, blocked_shape.ndim):
+        blocked_shape[i] = np.ceil(blocked_shape[i])
+    blocked_shape = blocked_shape.astype(np.int32)
     n_blocks = int(np.prod(blocked_shape))
 
     start_block = np.ravel_multi_index(
@@ -137,7 +140,7 @@ def join_tiles(tiles):
 
         out[tuple(slices)] += tile
 
-    return out.astype(tile.dtype)
+    return out
 
 
 tile = florinate(tile_generator)
