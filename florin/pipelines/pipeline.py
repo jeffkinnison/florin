@@ -99,6 +99,16 @@ class Pipeline(object):
             data = [data]
         return self.run(data)
 
+    def dump(self, fp):
+        """Serialize the pipeline and operations.
+
+        Parameters
+        ----------
+        fp : File
+            File to write the serialization to.
+        """
+        dill.dump(self, fp)
+
     def run(self, data):
         """Run data through the pipeline.
 
@@ -119,6 +129,18 @@ class Pipeline(object):
         examples of how to override ``run()``.
         """
         raise NotImplementedError
+
+    @staticmethod
+    def load(cls, fp):
+        """Deserialize a pipeline.
+
+        Parameters
+        ----------
+        fp : File
+            File pointer to the serialized pipeline.
+        """
+        pipe = dill.load(fp)
+        return fp
 
 
 class PipelineInput(object):
