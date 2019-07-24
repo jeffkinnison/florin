@@ -23,4 +23,4 @@ class SerialPipeline(Pipeline):
 
     def run(self, data):
         result = map(self.operations, data)
-        return result
+        return list(result)
