@@ -111,7 +111,7 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
         end[over] = np.asarray(img.shape)[over]
         slices = [slice(start[j], end[j]) for j in range(len(shape))]
 
-        if isinstance(block, CloudVolume):
+        if isinstance(img, CloudVolume):
             slices = slices[::-1]
 
         block = img[tuple(slices)]
