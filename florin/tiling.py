@@ -11,6 +11,8 @@ join_tiles
 import h5py
 import numpy as np
 
+from cloudvolume import CloudVolume
+
 from florin.closure import florinate
 from florin.context import FlorinMetadata
 
@@ -108,7 +110,15 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
         over = np.where(end > np.asarray(img.shape))
         end[over] = np.asarray(img.shape)[over]
         slices = [slice(start[j], end[j]) for j in range(len(shape))]
+
+        if isinstance(block, CloudVolume):
+            slices = slices[::-1]
+
         block = img[tuple(slices)]
+
+        if isinstance(block, CloudVolume):
+            block = np.transpose(block, axes=(2, 1, 0))
+
         yield block, \
               FlorinMetadata(original_shape=img.shape, origin=tuple(start))
 
