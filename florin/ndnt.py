@@ -104,7 +104,7 @@ def ndnt(img, shape=None, threshold=0.25, sums=None, counts=None):
     return np.abs(1 - np.reshape(out, img.shape)).astype(np.uint8)
 
 
-def integral_image(img, inplace=False):
+def integral_image(img, dims=None, inplace=False):
     """Compute the integral image of an image or image volume.
 
     Parameters
@@ -130,9 +130,14 @@ def integral_image(img, inplace=False):
     .. [1] Tapia, E., 2011. A note on the computation of high-dimensional
        integral images. Pattern Recognition Letters, 32(2), pp.197-201.
     """
+    if dims is None:
+        dims = [1 for _ in range(img.ndim)]
+    else:
+        dims = list(dims)
     int_img = np.copy(img) if not inplace else img
     for i in range(len(img.shape) - 1, -1, -1):
-        int_img = np.cumsum(int_img, axis=i)
+        if dims[i]:
+            int_img = np.cumsum(int_img, axis=i)
     return int_img
 
 
