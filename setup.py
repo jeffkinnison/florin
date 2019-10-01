@@ -6,7 +6,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r') as f:
 
 setup(
     name='florin',
-    version='0.0.2',
+    version='0.0.2post1',
     description='Fast image segmentation without needing to learn a thing.',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
@@ -31,6 +31,7 @@ setup(
     ],
     keywords='machine_learning hyperparameters distributed_computing',
     install_requires=[
+        'cloud-volume',
         'h5py',
         'mpi4py>=3.0.0',
         'networkx',
