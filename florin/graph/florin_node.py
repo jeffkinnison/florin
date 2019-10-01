@@ -7,9 +7,12 @@ FlorinNode
 """
 
 from itertools import count
+import time
 import weakref
 
 import networkx as nx
+
+from ..log_utils import logger
 
 
 class MetaFlorinNode(type):
@@ -76,6 +79,7 @@ class FlorinNode(object, metaclass=MetaFlorinNode):
 
         # Process any data passed into the node as the input. If no data was
         # passed in, grab any dependencies and use those as input.
+        start = time.time()
         if data is not None:
             if not isinstance(data, tuple):
                 data = (data,)
@@ -88,6 +92,9 @@ class FlorinNode(object, metaclass=MetaFlorinNode):
                       else graph[dep][self][data_key][key]
                       for key, dep in self.kwargs.items()}
             result = self.operation(*args, **kwargs)
+        end = time.time()
+        logger.info('Function {0}: running time {1:0.3f}s'.format(
+                           self.__name__, end - start))
 
         # Place the result of this operation in the output edges.
         outedges = []
