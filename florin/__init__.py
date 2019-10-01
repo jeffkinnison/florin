@@ -38,6 +38,7 @@ tile
 from .classification import classify, FlorinClassifier
 from .closure import florinate
 from .io import load, save
+from .log_utils import FlorinLogger
 from .tiling import tile, join
 from .pipelines.pipeline import PipelineInput
 from .pipelines import BalsamPipeline as Balsam
@@ -51,3 +52,5 @@ from .reconstruction import reconstruct
 
 bounds_classifier = FlorinClassifier
 pipeline_input = PipelineInput()
+
+logger = FlorinLogger()
