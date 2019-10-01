@@ -29,7 +29,7 @@ class InvalidThresholdError(ValueError):
         super(InvalidThresholdError, self).__init__(msg)
 
 
-def ndnt(img, shape=None, threshold=0.25, inplace=False):
+def ndnt(img, shape=None, threshold=0.25, sums=None, counts=None):
     """Compute an n-dimensional Bradley thresholding of an image or volume.
 
     The Bradley thresholding, also called Local Adaptive Thresholding, uses the
@@ -47,6 +47,12 @@ def ndnt(img, shape=None, threshold=0.25, inplace=False):
     threshold : float
         The threshold value as the percentage of greyscale value to keep. Must
         be in [0, 1].
+    sums : array_like
+        Precomputed sums over the integral image for reuse over NDNT calls.
+        Output of ``integral_image_sum``.
+    counts : array_like
+        Precomputed counts over the integral image for reuse over NDNT calls.
+        Output of ``integral_image_sum``.
 
     Notes
     -----
@@ -84,18 +90,21 @@ def ndnt(img, shape=None, threshold=0.25, inplace=False):
     else:
         raise InvalidThresholdError(threshold)
 
-    # Get the summed area table and counts, as per Bradley thresholding
-    sums, counts = integral_image_sum(integral_image(img), shape=shape)
+    if sums is None and counts is None:
+        # Get the summed area table and counts, as per Bradley thresholding
+        sums, counts = integral_image_sum(integral_image(img), shape=shape)
 
     # Compute the thresholding and binarize the image
     out = np.ones(img.ravel().shape, dtype=np.uint8)
-    out[img.ravel() * counts.ravel() <= sums.ravel() * threshold] = 0
+    lhs = (img.ravel() * counts.ravel())
+    rhs = (sums.ravel() * threshold)
+    out[np.where(lhs <= rhs)] = 0
 
     # Return the binarized image in the correct shape
     return np.abs(1 - np.reshape(out, img.shape)).astype(np.uint8)
 
 
-def integral_image(img, inplace=False):
+def integral_image(img, dims=None, inplace=False):
     """Compute the integral image of an image or image volume.
 
     Parameters
@@ -121,9 +130,14 @@ def integral_image(img, inplace=False):
     .. [1] Tapia, E., 2011. A note on the computation of high-dimensional
        integral images. Pattern Recognition Letters, 32(2), pp.197-201.
     """
+    if dims is None:
+        dims = [1 for _ in range(img.ndim)]
+    else:
+        dims = list(dims)
     int_img = np.copy(img) if not inplace else img
     for i in range(len(img.shape) - 1, -1, -1):
-        int_img = np.cumsum(int_img, axis=i)
+        if dims[i]:
+            int_img = np.cumsum(int_img, axis=i)
     return int_img
 
 
@@ -194,7 +208,7 @@ def integral_image_sum(int_img, shape=None, return_counts=True):
     sums = np.zeros(int_img.shape)
     for i in range(len(indices)):
         idx = tuple(bounds[j, indices[i][j]] for j in range(len(indices[i])))
-        sums += parity[i] * int_img[idx]
+        sums += np.multiply(int_img[idx], parity[i])
 
     # If pixel neighorhood sizes are requested, compute the area/volume of each
     # neighborhood.

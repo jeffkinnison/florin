@@ -13,7 +13,7 @@ setup(
     url='https://github.com/jeffkinnison/florin',
     author='Jeff Kinnison, Elia Shahbazi',
     author_email='jkinniso@nd.edu, ashahbaz@nd.edu',
-    packages=['florin', 'florin.pipelines'],
+    packages=['florin', 'florin.graph', 'florin.pipelines'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
@@ -33,6 +33,7 @@ setup(
     install_requires=[
         'h5py',
         'mpi4py>=3.0.0',
+        'networkx',
         'numpy',
         'pathos',
         'scikit-image',

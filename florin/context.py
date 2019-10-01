@@ -2,27 +2,32 @@
 
 Classes
 -------
-FlorinContext
-    Context for data flowing through a pipeline.
+FlorinMetadata
+    Metadata for data flowing through a pipeline.
 """
 
 
-class FlorinContext(object):
-    """Context for data flowing through a pipeline."""
+class FlorinMetadata(dict):
+    """Metadata for data flowing through a pipeline.
 
-    def __init__(self, **kwargs):
-        for key, val in kwargs.items():
-            setattr(self, key, val)
+    Notes
+    -----
+    To incorporate Metadata into the pipeline, return it from an operation in a
+    pair with the output of the function, e.g. ``return output, metadata``.
+    """
 
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __setitem__(self, key, val):
-        setattr(self, key, val)
-
-    def __contains__(self, key):
+    def __getattr__(self, key):
         try:
-            getattr(self, key)
-            return True
-        except AttributeError:
-            return False
+            return self[key]
+        except KeyError:
+            return super(FlorinMetadata, self).__getattr__(key)
+
+    def __setattr__(self, key, val):
+        self[key] = val
+
+    def __delattr__(self, key):
+        del self[key]
+
+    def update(self, other):
+        super(FlorinMetadata, self).update(other)
+        return self

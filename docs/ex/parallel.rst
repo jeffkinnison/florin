@@ -187,7 +187,7 @@ that will receive multiple inputs.
             # Run the pipeline
             segmented = pipeline()
 
-All of these examples scale to the number of availble cores (or MPI ranks in
+All of these examples scale to the number of available cores (or MPI ranks in
 the MPI version), and can be parameterized to use a specific number when the
 sub-pipelines are created.
 
@@ -200,58 +200,60 @@ vectorized operations and may be better suited to multi-node parallelism with
 MPI, but classification is more lightweight and can be carried out in threads.
 This sort of a pipeline would look like::
 
-    import florin
-    import florin.conncomp as conncomp
-    import florin.morphology as morphology
-    import florin.thresholding as thresholding
+    .... code-block:: python
 
-    # Set up a serial pipeline
-    pipeline = florin.Serial(
-        # Load in the volume from file
-        florin.load(),
+        import florin
+        import florin.conncomp as conncomp
+        import florin.morphology as morphology
+        import florin.thresholding as thresholding
 
-        # Tile the volume into overlapping 64 x 64 x 10 subvolumes
-        florin.tile(shape=(10, 64, 64), stride=(10, 32, 32)),
+        # Set up a serial pipeline
+        pipeline = florin.Serial(
+            # Load in the volume from file
+            florin.load(),
 
-        florin.MPI(
-            # Threshold with NDNT
-            thresholding.ndnt(shape=(10, 64, 64), thresshold=0.3),
+            # Tile the volume into overlapping 64 x 64 x 10 subvolumes
+            florin.tile(shape=(10, 64, 64), stride=(10, 32, 32)),
 
-            # Clean up a little bit
-            morphology.binary_opening()
-        ),
+            florin.MPI(
+                # Threshold with NDNT
+                thresholding.ndnt(shape=(10, 64, 64), thresshold=0.3),
 
-        # Save the output to a TIFF stack
-        florin.save('segmented.tiff'),
+                # Clean up a little bit
+                morphology.binary_opening()
+            ),
 
-        # Find connected components
-        conncomp.label(),
-        morphology.remove_small_holes(min_size=20),
-        conncomp.regionprops(),
+            # Save the output to a TIFF stack
+            florin.save('segmented.tiff'),
 
-        # Classify the connected components by their volume and dimensions
-        florin.Multithread(
-            florin.classify(
-                florin.bounds_classifier(
-                    'cell',
-                    area=(100, 300),
-                    depth=(10, 25),
-                    width=(50, 100),
-                    height=(50, 100)
-                ),
-                florin.bounds_classifier('vasculature')
+            # Find connected components
+            conncomp.label(),
+            morphology.remove_small_holes(min_size=20),
+            conncomp.regionprops(),
+
+            # Classify the connected components by their volume and dimensions
+            florin.Multithread(
+                florin.classify(
+                    florin.bounds_classifier(
+                        'cell',
+                        area=(100, 300),
+                        depth=(10, 25),
+                        width=(50, 100),
+                        height=(50, 100)
+                    ),
+                    florin.bounds_classifier('vasculature')
+                )
             )
+
+            # Reconstruct the labeled volume
+            florin.reconstruct(),
+
+            # Write out the labeled volume
+            florin.save('labeled.tiff')
         )
 
-        # Reconstruct the labeled volume
-        florin.reconstruct(),
-
-        # Write out the labeled volume
-        florin.save('labeled.tiff')
-    )
-
-    # Run the pipeline
-    segmented = pipeline()
+        # Run the pipeline
+        segmented = pipeline()
 
 In this case, an implicit join after the MPI pipeline converts merges the
 segmented tiles into a single volume. Connected components are then computed

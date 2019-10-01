@@ -8,9 +8,11 @@ florinate
 """
 
 from collections import Sequence
+from itertools import count
 import functools
 
-from florin.context import FlorinContext
+from florin.context import FlorinMetadata
+from florin.graph import FlorinNode
 
 
 def florinate(func):
@@ -57,16 +59,22 @@ def florinate(func):
     """
     @functools.wraps(func)
     def wrapper(*wrapper_args, **wrapper_kwargs):
-        """Function wrapper that saves args and keyword arguments."""
-        @functools.wraps(func)
-        def delayed(*args, **kwargs):
-            """Wrapper for deferred function calls with persistent arguments"""
-            kwargs.update(wrapper_kwargs)
-            if isinstance(args[0], Sequence) and isinstance(args[0][-1], FlorinContext):
-                innerargs = tuple(args[0][:-1]) + wrapper_args
-                return func(*innerargs, **kwargs), args[0][-1]
-            else:
-                innerargs = args + wrapper_args
-                return func(*innerargs, **kwargs)
-        return delayed
+        """Function wrapper that saves args and keyword arguments.
+
+        When args and keyword args are passed, the function is wrapped in a
+        FlorinNode instance and the arguments are saved for future use.
+
+        Parameters
+        ----------
+        *args
+        **kwargs
+            Arguments and keyword arguments to be passed to the wrapped
+            function when called at a later time.
+
+        Returns
+        -------
+        FlorinNode
+            The graph node representing the parameterized function.
+        """
+        return FlorinNode(func, *wrapper_args, **wrapper_kwargs)
     return wrapper

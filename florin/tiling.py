@@ -11,8 +11,10 @@ join_tiles
 import h5py
 import numpy as np
 
+from cloudvolume import CloudVolume
+
 from florin.closure import florinate
-from florin.context import FlorinContext
+from florin.context import FlorinMetadata
 
 
 class DimensionMismatchError(ValueError):
@@ -47,7 +49,7 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
     tile : florin.FlorinVolume
         A subdivision of ``img``. Subdivisions are yielded in sequence from the
         start of ``img``.
-    metadata : dictionary
+    metadata : florin.context.Metadata
         Key/value store of metadata, e.g. for joining tiles.
 
     Notes
@@ -90,7 +92,10 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
 
     # Get the number of volumes
     img_shape = np.asarray(img.shape)
-    blocked_shape = ((img_shape - offset) / stride).astype(np.int32)
+    blocked_shape = ((img_shape - offset) / stride)
+    for i in range(1, blocked_shape.ndim):
+        blocked_shape[i] = np.ceil(blocked_shape[i])
+    blocked_shape = blocked_shape.astype(np.int32)
     n_blocks = int(np.prod(blocked_shape))
 
     start_block = np.ravel_multi_index(
@@ -104,12 +109,18 @@ def tile_generator(img, shape=None, stride=None, offset=None, tile_store=None):
         end = start + shape
         over = np.where(end > np.asarray(img.shape))
         end[over] = np.asarray(img.shape)[over]
-        # print(end)
         slices = [slice(start[j], end[j]) for j in range(len(shape))]
+
+        if isinstance(img, CloudVolume):
+            slices = slices[::-1]
+
         block = img[tuple(slices)]
-        # if block.size > 0:
+
+        if isinstance(block, CloudVolume):
+            block = np.transpose(block, axes=(2, 1, 0))
+
         yield block, \
-              FlorinContext(original_shape=img.shape, origin=tuple(start))
+              FlorinMetadata(original_shape=img.shape, origin=tuple(start))
 
 
 def join_tiles(tiles):
@@ -139,7 +150,7 @@ def join_tiles(tiles):
 
         out[tuple(slices)] += tile
 
-    return out.astype(tile.dtype)
+    return out
 
 
 tile = florinate(tile_generator)

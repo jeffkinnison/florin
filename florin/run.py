@@ -6,12 +6,12 @@ deserialize_and_run
     Load a serialized pipeline and run it on provided data.
 """
 
-import dill
+from florin.pipelines.pipeline import Pipeline
 
 
 def deserialize_and_run(path, data):
     with open(path, 'r') as f:
-        pipeline = dill.load(f)
+        pipeline = Pipeline.load(f)
     return pipeline(data)
 
 

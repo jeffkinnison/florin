@@ -35,12 +35,17 @@ tile
     Split a single array into sub-arrays.
 """
 
-from .classification import classify, FlorinClassifier
+
+from .log_utils import logger
+
 from .closure import florinate
+from .classification import classify, FlorinClassifier
 from .io import load, save
 from .tiling import tile, join
+from .pipelines.pipeline import PipelineInput
 from .pipelines import BalsamPipeline as Balsam
 from .pipelines import MPIPipeline as MPI
+from .pipelines import MPITaskQueuePipeline as MPITaskQueue
 from .pipelines import MultiprocessingPipeline as Multiprocess
 from .pipelines import MultithreadingPipeline as Multithread
 from .pipelines import SerialPipeline as Serial
@@ -48,3 +53,4 @@ from .pipelines import WorkQueuePipeline as WorkQueue
 from .reconstruction import reconstruct
 
 bounds_classifier = FlorinClassifier
+pipeline_input = PipelineInput()
