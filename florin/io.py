@@ -30,9 +30,12 @@ save_tiff
 
 import glob
 import os
+import re
 import sys
 
 import h5py
+from cloudvolume import CloudVolume
+from mpi4py import MPI
 import numpy as np
 from skimage.io import imread, imsave
 
@@ -70,12 +73,20 @@ def load(path, **kwargs):
         img = load_npy(path)
     elif ext in ['tif', 'tiff']:
         img = load_tiff(path)
+    elif re.search(r'^[a-zA-Z]+://.+$', path) or (os.path.isdir(path) and os.path.isfile(os.path.join(path, 'info'))):
+        img = load_cloudvolume(path, **kwargs)
     elif os.path.isdir(path):
         img = load_images(path)
     else:
         img = load_image(path)
 
     return img
+
+
+def load_cloudvolume(path, mip=0, **kwargs):
+    if os.path.isdir(path) and not re.search(r'^file://.+$', path):
+        path = 'file://{}'.format(path)
+    return CloudVolume(path, mip=mip)
 
 
 def load_hdf5(path, key='stack', keep_alive=False):
@@ -203,7 +214,7 @@ def save(img, path, **kwargs):
     numbered PNG files in a directory created at ``path`` and 2D arrays will be
     saved to ``path`` directly as a PNG.
     """
-    if img.dtype == np.bool:
+    if isinstance(img, np.ndarray) and img.dtype == np.bool:
         img = img.astype(np.uint8) * 255
 
     if isinstance(img, map):
@@ -225,6 +236,101 @@ def save(img, path, **kwargs):
     else:
         save_image(img, path)
     return img
+
+
+def save_cloudvolume(img, path, mode, origin, mip=0, resolution=None,
+                     flip_xy=False, voxel_offset=None, volume_size=None,
+                     chunk_size=(64, 64, 64), factor=(2, 2, 2)):
+    """Save images to a CloudVolume layer.
+
+    Parameters
+    ----------
+    img : array_like
+        The image/volume to save.
+    path : str
+        The directory to write the layer to.
+    mode : {'image', 'segmentation'}
+    """
+    if mode not in ['image', 'segmentation']:
+        raise ValueError('Invalid mode {}. Must be one of "image", "segmentation"'.format(mode))
+
+    if not re.search(r'^[a-zA-Z\d]+://$', path.split(os.path.sep)[0]):
+        raise ValueError('No protocol specified in {}.'.format(path))
+
+    if not os.path.isfile(os.path.join(path, 'info')):
+        if MPI.COMM_WORLD.Get_rank() == 0:
+            if mode == 'image':
+                info = CloudVolume.create_new_info(
+                    num_channels=img.shape[-1],
+                    layer_type='image',
+                    data_type='uint8',
+                    encoding='raw',
+                    resolution=resolution,
+                    voxel_offset=offset,
+                    volume_size=list(volume_size),
+                    chunk_size=chunk_size,
+                    max_mip=mip,
+                    factor=factor
+                )
+                cv_args = dict(
+                    bounded=True, fill_missing=True, autocrop=False,
+                    cache=False, compress_cache=None, cdn_cache=False,
+                    progress=False, info=info, provenance=None, compress=True,
+                    non_aligned_writes=True, parallel=1)
+                cv = CloudVolume(path, mip=0, **cv_args)
+                cv.commit_info()
+            elif mode == 'segmentation':
+                info = CloudVolume.create_new_info(
+                    num_channels=img.shape[-1],
+                    layer_type='segmentation',
+                    data_type='uint32',
+                    encoding='compressed_segmentation',
+                    resolution=resolution,
+                    voxel_offset=offset,
+                    volume_size=list(volume_size),
+                    chunk_size=chunk_size,
+                    max_mip=mip,
+                    factor=factor
+                )
+
+                if mip >= 1:
+                    for i in range(1, mip + 1):
+                        info['scales'][i]['compressed_segmentation_block_size'] = \
+                            info['scales'][0]['compressed_segmentation_block_size']
+
+                cv_args = dict(
+                    bounded=True, fill_missing=True, autocrop=False,
+                    cache=False, compress_cache=None, cdn_cache=False,
+                    progress=False, info=info, provenance=None, compress=True,
+                    non_aligned_writes=True, parallel=1)
+                cv = CloudVolume(path, mip=0, **cv_args)
+                cv.commit_info()
+
+        if MPI.COMM_WORLD.Get_size() > 1:
+            MPI.COMM_WORLD.barrier()
+
+    if flip_xy:
+        img = np.transpose(img, axes=(1, 2, 0))
+    else:
+        img = np.transpose(img, axes=(2, 1, 0))
+
+    cv_args = dict(
+        bounded=True, fill_missing=True, autocrop=False,
+        cache=False, compress_cache=None, cdn_cache=False,
+        progress=False, info=None, provenance=None,
+        compress=(mode=='segmentation'), non_aligned_writes=True, parallel=1)
+
+    for m in range(mip + 1):
+        cv = CloudVolume(path, mip=m, **cv_args)
+
+        offset = cv.mip_voxel_offset(m)
+        step = np.power(np.asarray(factor), m)
+        cv_z_start = origin[0] // step[2] + offset[2]
+        cv_z_size = img.shape[2]
+        cv[:, :, cv_z_start:cv_z_start + cv_z_size] = loaded_vol
+        img = img[::factor[0], ::factor[1], ::factor[2]]
+
+    return cv
 
 
 def save_hdf5(img, path, key='stack', overwrite=True):
